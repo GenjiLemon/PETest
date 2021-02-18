@@ -1,0 +1,140 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">学号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="student_number" autocomplete="off" class="layui-input">
+                            </div>
+						</div>
+						<div class="layui-inline">
+						    <label class="layui-form-label">年级</label>
+						    <div class="layui-input-inline">
+						        <select class="layui-inline" name="grade" lay-verify="" lay-search>
+						        	<option value="2020">2020</option>
+						        	<option value="2019">2019</option>
+						        	<option value="2018">2018</option>
+						        </select>   
+						    </div>
+						</div>
+						<div class="layui-inline">
+							<label class="layui-form-label">学院</label>
+							<div class="layui-input-inline">
+							    <select class="layui-inline" name="college" lay-verify="" lay-search>
+									<option value="数学计算机">数学计算机</option>
+									<option value="物理信息">物理信息</option>
+									<option value="体育学院">体育学院</option>
+							    </select>   
+							</div>
+						 </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+       
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+		var baseTitle=[
+                {type: "checkbox", width: 50},
+                {field: 'id', title: '序号'},
+                {field: 'college_name', title: '学院（系）名称', minWidth: 150},
+                {field: 'grade', title: '年级'},
+                {field: 'class_name', title: '专业班级'},
+                {field: 'name', title: '姓名'},
+                {field: 'sex',  title: '性别'},
+                {field: 'student_number',  title: '学号', sort: true, minWidth: 150},
+                {field: 'comment',  title: '备注'},
+				{field: 'student_number',  title: '学号', sort: true, minWidth: 150}
+            ];
+			$.get
+        table.render({
+            elem: '#currentTableId',
+            url: '/api/student-list',
+            toolbar: 'true',
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [baseTitle],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+		
+	
+		
+		
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var result = JSON.stringify(data.field);
+            layer.alert(result, {
+                title: '最终的搜索信息'
+            });
+			var gradeTitle=[
+				{field: '50米',  title: '50米'},
+				{field: '坐位体前屈',  title: '坐位体前屈'},
+				{field: '立定跳远',  title: '立定跳远'},
+				{field: '仰卧起坐（女）',  title: '仰卧起坐（女）'},
+				{field: '引体向上（男）',  title: '引体向上（男）'},
+				{field: '800米（女）',  title: '800米（女）'},
+				{field: '1000米（男）',  title: '1000米（男）'},
+			];
+			//添加元素到数组
+			var newTitle=baseTitle;
+			$.each(gradeTitle,function(index,value){
+				newTitle.push(value);
+			});
+			console.log(newTitle);
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                }
+                , where: {
+                    searchParams: result
+                },
+				cols:[newTitle]
+            });
+
+            return false;
+        });
+		
+    
+
+        //监听表格复选框选择
+        table.on('checkbox(currentTableFilter)', function (obj) {
+            console.log(obj)
+        });
+
+       
+
+    });
+</script>

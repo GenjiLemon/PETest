@@ -1,0 +1,21 @@
+{
+  "code": 0,
+  "msg": "",
+  "count": 1000,
+  "data": [
+    {
+      "id": 1,
+      "year":2020,
+	  "total_num":100,
+	  "boy_num":30,
+	  "girl_num":70
+    },
+    {
+      "id": 2,
+      "year":2019,
+      "total_num":200,
+      "boy_num":130,
+      "girl_num":70
+    }
+  ]
+}

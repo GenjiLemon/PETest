@@ -3,4 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.config.from_object('config')
 db = SQLAlchemy(app)
-from app import views,models,db_create
+#顺序生成视图、模型、创建数据库等
+from app import views,models
+debug=True
+#debug=True
+if not debug:
+    from app import db_create
+
+from app import service

@@ -1,0 +1,26 @@
+{
+  "code": 0,
+  "msg": "",
+  "count": 1000,
+  "data": [
+    {
+      "id": 1,
+      "college_name":"物理学院",
+	  "grade":2020,
+	  "class_name":"物理学",
+	  "name":"小明",
+	  "sex":"男",
+	  "student_number":"20202020202020",
+	  "comment":"备注"
+    },
+    {"id": 2,
+      "college_name":"数学学院",
+      "grade":2020,
+      "class_name":"数学应用数学",
+      "name":"小红",
+      "sex":"女",
+      "student_number":"20202020202021",
+      "comment":"备注"
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">年级</label>
+                            <div class="layui-input-inline">
+                                <select class="layui-inline" name="grade" lay-verify="" lay-search>
+                                	<option value="2020">2020</option>
+                                	<option value="2019">2019</option>
+                                	<option value="2018">2018</option>
+                                </select>   
+                            </div>
+                        </div>
+						<div class="layui-inline">
+							<label class="layui-form-label">学院</label>
+							<div class="layui-input-inline">
+							    <select class="layui-inline" name="college_name" lay-verify="" lay-search>
+									<option value="数学计算机">数学计算机</option>
+									<option value="物理信息">物理信息</option>
+									<option value="体育学院">体育学院</option>
+							    </select>   
+							</div>
+						 </div>
+						 <div class="layui-inline">
+						     <label class="layui-form-label">专业</label>
+						     <div class="layui-input-inline">
+						         <select class="layui-inline" name="major_name" lay-verify="" lay-search>
+						         	<option value="物理学">物理学</option>
+						         	<option value="计算机">计算机</option>
+						         	<option value="体育">体育</option>
+						         </select>   
+						     </div>
+						 </div>
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <script type="text/html" id="studentToolBar">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加选中学生 </button>
+            </div>
+        </script>
+
+		<table class="layui-hide" id="studentTableId" lay-filter="studentTableFilter"></table>
+		<div>已经抽取信息</div>
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+		<div>历史抽取信息</div>
+		<script type="text/html" id="previousStudentBar">
+		    <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="detail">查看详情</a>
+		</script>
+		<table class="layui-hide" id="previousStudentId" lay-filter="previousStudentFilter"></table>
+        
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+			
+		// 监听搜索操作
+		form.on('submit(data-search-btn)', function (data) {
+		    var result = JSON.stringify(data.field);
+		    layer.alert(result, {
+		        title: '最终的搜索信息'
+		    });
+		
+		    //执行搜索重载
+		    table.reload('currentTableId', {
+		        page: {
+		            curr: 1
+		        }
+		        , where: {
+		            searchParams: result
+		        }
+		    }, 'data');
+		
+		    return false;
+		});	
+		
+		table.render({
+			elem: '#studentTableId',
+			url: '/api/student-list',
+			toolbar: '#studentToolBar',
+			defaultToolbar: ['filter', 'exports', 'print', {
+				title: '提示',
+				layEvent: 'LAYTABLE_TIPS',
+				icon: 'layui-icon-tips'
+			}],
+			cols: [[
+				{type: "checkbox", width: 50},
+				{field: 'id', title: '序号'},
+				{field: 'college_name', title: '学院（系）名称', minWidth: 150},
+				{field: 'grade', title: '年级'},
+				{field: 'class_name', title: '专业班级'},
+				{field: 'name', title: '姓名'},
+				{field: 'sex',  title: '性别'},
+				{field: 'student_number',  title: '学号', sort: true, minWidth: 150},
+				{field: 'comment',  title: '备注'}
+			]],
+			limits: [10, 15, 20, 25, 50, 100],
+			limit: 15,
+			page: true,
+			skin: 'line'
+		});
+			
+		//监听表格复选框选择
+		table.on('checkbox(studentTableFilter)', function (obj) {
+		    console.log(obj)
+		});
+		//监听添加
+		table.on('tool(studentTableId)',function(obj){
+			
+		})
+		
+		/**
+		 * toolbar事件监听
+		 */
+		table.on('toolbar(studentTableFilter)', function (obj) {
+		    if (obj.event === 'add') {   // 监听添加操作
+		        var content = miniPage.getHrefContent('page/addStudent.html');
+		        var openWH = miniPage.getOpenWidthHeight();
+		
+		        var index = layer.open({
+		            title: '添加学生',
+		            type: 1,
+		            shade: 0.2,
+		            maxmin:true,
+		            shadeClose: true,
+		            area: [openWH[0] + 'px', openWH[1] + 'px'],
+		            offset: [openWH[2] + 'px', openWH[3] + 'px'],
+		            content: content,
+		        });
+		        $(window).on("resize", function () {
+		            layer.full(index);
+		        });
+		    } 
+		});
+		
+        table.render({
+            elem: '#currentTableId',
+            url: '/api/grade-student',
+            toolbar: true,
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'year', title: '年级'},
+                {field: 'boy_num',  title: '男生人数'},
+                {field: 'girl_num', title: '女生人数'},
+				{field:'total_num',title:'总人数'}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        
+		table.render({
+		    elem: '#previousStudentId',
+		    url: '/api/grade-student',
+		    toolbar: true,
+		    defaultToolbar: ['filter', 'exports', 'print', {
+		        title: '提示',
+		        layEvent: 'LAYTABLE_TIPS',
+		        icon: 'layui-icon-tips'
+		    }],
+		    cols: [[
+		        {field: 'year', title: '年份'},
+		        {field: 'boy_num',  title: '男生人数'},
+		        {field: 'girl_num', title: '女生人数', minWidth: 150},
+				{title: '操作', minWidth: 150, toolbar: '#previousStudentBar', align: "center"}
+		    ]],
+		    limits: [10, 15, 20, 25, 50, 100],
+		    limit: 15,
+		    page: true,
+		    skin: 'line'
+		});
+		
+		table.on('tool(previousStudentFilter)', function (obj) {
+		    var data = obj.data;
+		    if (obj.event === 'detail') {
+				// var content = miniPage.getHrefContent('page/yearStudent.html');
+				// var openWH = miniPage.getOpenWidthHeight();
+				
+				// var index = layer.open({
+				//     title: '历史详细数据',
+				//     type: 1,
+				//     shade: 0,
+				//     maxmin:true,
+				//     shadeClose: true,
+				//     area: [openWH[0] + 'px', openWH[1] + 'px'],
+				//     offset: [openWH[2] + 'px', openWH[3] + 'px'],
+				//     content: content,
+				// });
+				miniPage.hashChange("page/yearStudent.html");
+				return false;
+		    } 
+		});
+
+        
+
+    });
+</script>
