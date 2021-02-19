@@ -1,8 +1,36 @@
-from flask import Blueprint,render_template, request,jsonify
-from app import db,models
+from flask import Blueprint, render_template, request, jsonify, session
+from app import db,models,service
 from sqlalchemy import and_,or_
+from .utils import *
 api = Blueprint('api',__name__)
 
+@api.route('/student',methods=['GET','POST','PUT','DELETE'])
+def school_student():
+    if request.method=="POST":
+        student=models.Student()
+        data=request.form.to_dict()
+        student.name=data.get('name')
+        student.sex = data.get('sex')
+        student.student_number=data.get('student_number')
+        student.college_name = data.get('college_name')
+        student.grade = data.get('grade')
+        student.class_name=data.get('class_name')
+        student.school_id=session.get('school_id')
+        if(service.addStudent(student)):
+            return jsonRet()
+        else: return jsonRet(-1,"请检查信息后再提交")
+    elif request.method=="GET":
+        form=request.form.to_dict()
+        data=service.findStudents(session.get('school_id'),name=form['name'],number=form['student_number'],college=form['college_name'],grade=form['grade'])
+        return jsonRet(data=data)
+
+@api.route('/gradeStudent',methods=["GET"])
+def school_gradeStudent():
+    data=service.getStudentSums()
+    #加个id栏
+    data=addIdColumn(data)
+    count= len(data)
+    return jsonRet(data=data,count=count)
 @api.route("/systemInit",methods=['GET'])
 def getSystemInit(type=1):
     if type==1:

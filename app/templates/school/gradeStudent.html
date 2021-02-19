@@ -21,13 +21,19 @@
 						<div class="layui-inline">
 							<label class="layui-form-label">学院</label>
 							<div class="layui-input-inline">
-							    <select class="layui-inline" name="college" lay-verify="" lay-search>
+							    <select class="layui-inline" name="college_name" lay-verify="" lay-search>
 									<option value="数学计算机">数学计算机</option>
 									<option value="物理信息">物理信息</option>
 									<option value="体育学院">体育学院</option>
 							    </select>   
 							</div>
 						 </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">年级</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="grade" autocomplete="off" class="layui-input" value="" readonly>
+                            </div>
+                        </div>
                         <div class="layui-inline">
                             <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
                         </div>
@@ -111,7 +117,7 @@
          */
         table.on('toolbar(currentTableFilter)', function (obj) {
             if (obj.event === 'add') {   // 监听添加操作
-                var content = miniPage.getHrefContent('page/addStudent.html');
+                var content = miniPage.getHrefContent('/school/addStudent');
                 var openWH = miniPage.getOpenWidthHeight();
 
                 var index = layer.open({

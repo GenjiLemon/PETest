@@ -102,10 +102,53 @@ def importStudent(filename,school_id):
         e[0]=1
         e[5]=1 if e[5]=="男" else 0
     quickInsert(Student,columns,data)
-#查询学生
-def findStudents(schoolid,name=None,number=None,college=None):
-    pass
 
+def addStudent(student:Student):
+   try:
+       db.session.add(student)
+       db.session.commit()
+   except Exception as e:
+       print(e)
+       return False
+   return True
+#查询一个年级学生情况
+def getStudentSumByGrade(grade):
+    res = db.session.execute(
+        "SELECT s.sex,COUNT(s.sex) FROM student s WHERE grade='{}' GROUP BY s.sex ".format(grade))
+    ret={}
+    res=list()
+    #按照返回的情况是sex先0后1
+    ret['girl_num']=0
+    ret['boy_num'] = 0
+    for e in res:
+        if e[0]==0:
+            ret['girl_num']=e[1]
+        else:
+            ret['boy_num']=e[1]
+    ret['total_num']=ret['girl_num']+ret['boy_num']
+    ret['grade']=grade
+    return ret
+#查询每个年级学生的情况
+def getStudentSums():
+    sums=[]
+    #先查出所有的grade，再拿grade查出每个年级的情况
+    res=Student.query.with_entities(Student.grade).distinct().order_by(Student.grade.desc()).all()
+    for e in res:
+        sums.append(getStudentSumByGrade(e[0]))
+    return sums
+#查询学生
+def findStudents(schoolid,name=None,number=None,college=None,grade=None):
+    filter_list=[]
+    filter_list.append(Student.school_id==schoolid)
+    if name:
+        filter_list.append(Student.name==name)
+    if number:
+        filter_list.append(Student.student_number==number)
+    if college:
+        filter_list.append(Student.college_name==college)
+    if grade:
+        filter_list.append(Student.grade==grade)
+    return Student.query.filter(*filter_list).all()
 #选择学生
 #传入学生id的list
 def selectStudent(schoolid,studentids):

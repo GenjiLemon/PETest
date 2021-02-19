@@ -28,7 +28,7 @@ class Account(db.Model):
     __tablename__='account'
     id=db.Column(db.Integer,primary_key=True)
     username=db.Column(db.String(20),nullable=True,unique=True) #用户名
-    password=db.Column(db.String(20),nullable=True)             #密码
+    password=db.Column(db.String(255),nullable=True)             #密码
     type=db.Column(db.Integer,nullable=True)                    #账户类型，1校级账户，2省厅账户
 
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'))  #学校id外键
@@ -119,8 +119,8 @@ class StudentSelection(db.Model):
     year=db.Column(db.Integer,nullable=False)       #年份
     boy=db.Column(db.Integer,default=0)             #男生人数
     girl=db.Column(db.Integer,default=0)            #女生人数
-    submit=db.Column(db.Integer,default=0)          #提交状态
-    confirm=db.Column(db.Integer,default=0)         #审核状态
+    submit=db.Column(db.Integer,default=0)          #提交状态，0未提交，1已提交
+    confirm=db.Column(db.Integer,default=0)         #审核状态,0审核不通过，1审核通过
     submit_comment=db.Column(db.String(255))        #提交备注
     confirm_comment=db.Column(db.String(255))       #审核备注
 
