@@ -23,11 +23,24 @@ from app.service import *
 # print(ret)
 # print(ret[1])
 # print(ret[1][0])
-# data=service.getStudentSums()
+
 # print(data)
-# ret=db.session.execute("SELECT s.sex,COUNT(s.sex) FROM student s WHERE grade='{}' GROUP BY s.sex ".format("2020级"))
-# l=list(ret)
-# print(l)
-page=1
-pn=Student.query.paginate(page,per_page=3)
-print(pn)
+
+# page=1
+# pn=Student.query.paginate(page,per_page=3)
+# print(pn.items)
+# for e in pn.items:
+#     print(e.name)
+from flask.json import JSONEncoder, jsonify
+app_ctx = app.app_context()
+app_ctx.push()
+
+class Ha():
+    name=1
+    sex=1
+    def serializable(self):
+        return self.name,self.sex
+a=Ha()
+
+
+print(jsonify(a))

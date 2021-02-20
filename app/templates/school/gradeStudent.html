@@ -21,21 +21,22 @@
 						<div class="layui-inline">
 							<label class="layui-form-label">学院</label>
 							<div class="layui-input-inline">
-							    <select class="layui-inline" name="college_name" lay-verify="" lay-search>
-									<option value="数学计算机">数学计算机</option>
-									<option value="物理信息">物理信息</option>
-									<option value="体育学院">体育学院</option>
-							    </select>   
+<!--							    <select class="layui-inline" name="college_name" lay-verify="" lay-search>-->
+<!--									<option value="数学计算机">数学计算机</option>-->
+<!--									<option value="物理信息">物理信息</option>-->
+<!--									<option value="体育学院">体育学院</option>-->
+<!--							    </select>   -->
+                                <input type="text" name="college_name" autocomplete="off" class="layui-input">
 							</div>
 						 </div>
                         <div class="layui-inline">
                             <label class="layui-form-label">年级</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="grade" autocomplete="off" class="layui-input" value="" readonly>
+                                <input type="text" name="grade" autocomplete="off" class="layui-input" >
                             </div>
                         </div>
                         <div class="layui-inline">
-                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                            <button type="submit" class="layui-btn layui-btn-primary" id="search"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
                         </div>
                     </div>
                 </form>
@@ -67,7 +68,7 @@
 
         table.render({
             elem: '#currentTableId',
-            url: 'api/student-list.json',
+            data:[],
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -83,7 +84,6 @@
                 {field: 'name', title: '姓名'},
                 {field: 'sex',  title: '性别'},
                 {field: 'student_number',  title: '学号', sort: true, minWidth: 150},
-                {field: 'comment',  title: '备注'},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
@@ -94,24 +94,28 @@
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            var result = JSON.stringify(data.field);
-            layer.alert(result, {
-                title: '最终的搜索信息'
+            $.get("/api/student",data.field,function(res){
+                 newdata=res.code==0?res.data:[];
+                //执行搜索重载
+                table.reload('currentTableId', {
+                                   data:newdata
+                 });
             });
-
-            //执行搜索重载
-            table.reload('currentTableId', {
-                page: {
-                    curr: 1
-                }
-                , where: {
-                    searchParams: result
-                }
-            }, 'data');
-
             return false;
         });
 
+        var refreshTable=function(){
+<!--            $.get("/api/student",[],function(res){-->
+<!--                 newdata=res.code==0?res.data:[];-->
+<!--                //执行搜索重载-->
+<!--                table.reload('currentTableId', {-->
+<!--                                   data:newdata-->
+<!--                 });-->
+<!--            });-->
+
+            $('#search').click();
+        };
+        refreshTable();
         /**
          * toolbar事件监听
          */
@@ -129,6 +133,9 @@
                     area: [openWH[0] + 'px', openWH[1] + 'px'],
                     offset: [openWH[2] + 'px', openWH[3] + 'px'],
                     content: content,
+                    end: function (){
+                         refreshTable()
+                    }
                 });
                 $(window).on("resize", function () {
                     layer.full(index);
@@ -136,16 +143,12 @@
             } 
         });
 
-        //监听表格复选框选择
-        table.on('checkbox(currentTableFilter)', function (obj) {
-            console.log(obj)
-        });
 
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'edit') {
 
-                var content = miniPage.getHrefContent('page/addStudent.html');
+                var content = miniPage.getHrefContent('/school/editStudent?id='+data.id);
                 var openWH = miniPage.getOpenWidthHeight();
 
                 var index = layer.open({
@@ -157,6 +160,9 @@
                     area: [openWH[0] + 'px', openWH[1] + 'px'],
                     offset: [openWH[2] + 'px', openWH[3] + 'px'],
                     content: content,
+                    end: function (){
+                         refreshTable()
+                    }
                 });
                 $(window).on("resize", function () {
                     layer.full(index);
@@ -164,8 +170,22 @@
                 return false;
             } else if (obj.event === 'delete') {
                 layer.confirm('真的删除行么', function (index) {
-                    obj.del();
-                    layer.close(index);
+                    $.ajax({
+                url:'/api/student',
+                type:'delete',
+                data:{id:data.id},
+                success:function(res){
+                    if(res.code==0){
+                        layer.msg("删除成功！");
+                        obj.del();
+                        layer.close(index);
+                    }
+                    else{
+                        layer.msg("删除失败！"+res.msg)
+                    }
+                }
+            });
+
                 });
             }
         });

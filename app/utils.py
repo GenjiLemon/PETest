@@ -4,6 +4,13 @@ import numpy as np
 import pandas as pd
 from flask import jsonify
 
+def objToDict(obj):
+    ret={}
+    if hasattr(obj,'__dict__'):
+        for k,v in obj.__dict__.items():
+            if not k.startswith('_'):
+                ret[k]=v
+    return ret
 
 def jsonRet(code=0,msg="",data=None,count=None):
     map={

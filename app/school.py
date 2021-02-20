@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, redirect, send_from_directory, url_for,session
-from app import app,service
+from flask import Blueprint, render_template, redirect, send_from_directory, url_for, session, request
+from werkzeug.exceptions import abort
+
+from app import app,service,db,models
 school = Blueprint('school',__name__)
 
 
@@ -21,6 +23,17 @@ def home():
 def addStudent():
     return render_template('school/addStudent.html')
 
+@school.route('/editStudent',methods=['GET'])
+def editStudent():
+    id=request.args.get('id',None)
+    if id==None:
+        abort(404)
+    else:
+        student=models.Student.query.get(id)
+        if student:
+            return render_template('school/editStudent.html',student=student)
+        else:abort(404)
+
 
 @school.route('/schoolScore',methods=['GET'])
 def schoolScore():
@@ -38,6 +51,6 @@ def studentScore():
 def uploadStudent():
     return render_template('school/uploadStudent.html')
 
-@school.route('/yearStudent',methods=['GET'])
+@school.route('/gradeStudent',methods=['GET'])
 def yearStudent():
     return render_template('school/gradeStudent.html')

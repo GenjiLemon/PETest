@@ -1,6 +1,9 @@
 from app import db
 import datetime
 #学校类
+from app.utils import objToDict
+
+
 class School(db.Model):
     __tablename__='school'
     id=db.Column(db.Integer,primary_key=True)
@@ -22,6 +25,12 @@ class Student(db.Model):
     class_name=db.Column(db.String(20))                      #班级名称
 
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'),nullable=False)   #学校id外键
+
+    def serializable(self):
+        ret=objToDict(self)
+        ret.pop('school_id')
+        return ret
+
 
 #账户类
 class Account(db.Model):
@@ -112,7 +121,7 @@ class ProjectSelection(db.Model):
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #项目id
 
-#抽取学生表
+#抽取学生审核
 class StudentSelection(db.Model):
     __tablename__='studentselection'
     id=db.Column(db.Integer,primary_key=True)
@@ -139,7 +148,7 @@ class Systemmenu(db.Model):
     type=db.Column(db.Integer)#1院校端，2省厅端
     child=[]
 
-    def serialize(self):
+    def serializable(self):
         rt={
             'title':self.title,
             'icon':self.icon,
@@ -148,5 +157,5 @@ class Systemmenu(db.Model):
             'child':[]
         }
         if self.child:
-             rt['child']=[c.serialize() for c in self.child if self.child]
+             rt['child']=[c.serializable() for c in self.child if self.child]
         return rt

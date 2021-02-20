@@ -4,11 +4,19 @@ from werkzeug.security import generate_password_hash,check_password_hash
 
 from .utils import jsonRet
 
+@app.before_request
+def debug_login(*args, **kwargs):
+    session['school_id'] = 1
+    session['user_id'] = 1
 
 @app.route("/")
 def index():
     #return redirect('/login')
     return redirect('/school/index')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error/404.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

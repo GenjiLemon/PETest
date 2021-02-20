@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, session
+from werkzeug.exceptions import abort
+
 from app import db,models,service
 from sqlalchemy import and_,or_
 from .utils import *
@@ -20,10 +22,34 @@ def school_student():
             return jsonRet()
         else: return jsonRet(-1,"请检查信息后再提交")
     elif request.method=="GET":
-        form=request.form.to_dict()
-        data=service.findStudents(session.get('school_id'),name=form['name'],number=form['student_number'],college=form['college_name'],grade=form['grade'])
+        args=request.args.to_dict()
+        data=service.findStudents(session.get('school_id'),
+                                  name=args.get('name',None),number=args.get('student_number',None),college=args.get('college_name',None),grade=args.get('grade',None))
         return jsonRet(data=data)
-
+    elif request.method=="DELETE":
+        id=request.form.get('id',None)
+        if id:
+            student=models.Student.query.get(id)
+            db.session.delete(student)
+            db.session.commit()
+            return jsonRet()
+        else: return jsonRet(-1,"id不存在")
+    elif request.method=="PUT":
+        student = models.Student()
+        data = request.form.to_dict()
+        student.id = data.get('id')
+        student.name = data.get('name')
+        student.sex = data.get('sex')
+        student.student_number = data.get('student_number')
+        student.college_name = data.get('college_name')
+        student.grade = data.get('grade')
+        student.class_name = data.get('class_name')
+        student.school_id = session.get('school_id')
+        if service.updateStudent(student):
+            return jsonRet()
+        else: return jsonRet(-1,"更新失败")
+    else: return jsonRet(-1)
+#获取每个年级的学生名册情况
 @api.route('/gradeStudent',methods=["GET"])
 def school_gradeStudent():
     data=service.getStudentSums()
@@ -40,16 +66,15 @@ def getSystemInit(type=1):
         }
         logoInfo={
             "title":"院校端",
-            "icon":"/static/school/images/logo.png"
+            "icon":"/static/layuimini/images/logo.png"
         }
         menuInfo=__getMenuList(type)
         init={
             "homeInfo":homeInfo,
             "logoInfo":logoInfo,
-            "menuInfo":[topMenu.serialize() for topMenu in menuInfo]
+            "menuInfo":menuInfo
         }
-        return init
-        #return jsonify(init)
+        return jsonify(init)
 
 def __getMenuList(type):
     menu=models.Systemmenu
@@ -68,29 +93,29 @@ def __buildChild(pid,type):
         return childmenuns
     return
 
-@api.route('/grade-student')
-def gradelist():
-    return {
-        "code": 0,
-        "msg": "",
-        "count": 1000,
-        "data": [
-            {
-                "id": 1,
-                "year": 2020,
-                "total_num": 100,
-                "boy_num": 30,
-                "girl_num": 70
-            },
-            {
-                "id": 2,
-                "year": 2019,
-                "total_num": 200,
-                "boy_num": 130,
-                "girl_num": 70
-            }
-        ]
-    }
+# @api.route('/grade-student')
+# def gradelist():
+#     return {
+#         "code": 0,
+#         "msg": "",
+#         "count": 1000,
+#         "data": [
+#             {
+#                 "id": 1,
+#                 "year": 2020,
+#                 "total_num": 100,
+#                 "boy_num": 30,
+#                 "girl_num": 70
+#             },
+#             {
+#                 "id": 2,
+#                 "year": 2019,
+#                 "total_num": 200,
+#                 "boy_num": 130,
+#                 "girl_num": 70
+#             }
+#         ]
+#     }
 
 @api.route('/student-list')
 def studentlist():

@@ -2,41 +2,46 @@
 
     <div class="layui-form layuimini-form">
         <div class="layui-form-item">
+            <input type="hidden" name="id" value="{{student.id}}" >
             <label class="layui-form-label required">姓名</label>
             <div class="layui-input-block">
-                <input type="text" name="name" lay-verify="required" lay-reqtext="姓名不能为空"  value="" class="layui-input">
-                <tip>填写自己管理账号的名称。</tip>
+                <input type="text" name="name" lay-verify="required" lay-reqtext="姓名不能为空"  value="{{student.name}}" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label required">性别</label>
             <div class="layui-input-block">
-                <input type="radio" name="sex" value="1" title="男" checked="">
-                <input type="radio" name="sex" value="0" title="女">
+                {% if student.sex==1 %}
+                <input type="radio" name="sex" value="1" title="男" checked>
+                <input type="radio" name="sex" value="0" title="女" >
+                {% else %}
+                 <input type="radio" name="sex" value="1" title="男" >
+                <input type="radio" name="sex" value="0" title="女" checked>
+                {% endif %}
             </div>
         </div>
 		<div class="layui-form-item">
 		    <label class="layui-form-label required">学号</label>
 		    <div class="layui-input-block">
-		        <input type="text" name="student_number" lay-verify="required" lay-reqtext="学号不能为空"  value="" class="layui-input">
+		        <input type="text" name="student_number" lay-verify="required" lay-reqtext="学号不能为空"  value="{{student.student_number}}" class="layui-input">
 		    </div>
 		</div>
         <div class="layui-form-item">
             <label class="layui-form-label required">学院</label>
             <div class="layui-input-block">
-                <input type="text" name="college_name" lay-verify="required" lay-reqtext="学院不能为空"  value="" class="layui-input">
+                <input type="text" name="college_name" lay-verify="required" lay-reqtext="学院不能为空"  value="{{student.college_name}}" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label required" >年级</label>
             <div class="layui-input-block">
-                <input type="text" name="grade" lay-verify="required" value="" lay-reqtext="年级不能为空" value="" class="layui-input">
+                <input type="text" name="grade" lay-verify="required"  lay-reqtext="年级不能为空"  value="{{student.grade}}" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label required">专业班级</label>
             <div class="layui-input-block">
-                <input type="text" name="class_name" lay-verify="required" value="" lay-reqtext="专业班级不能为空"value="" class="layui-input">
+                <input type="text" name="class_name" lay-verify="required"  lay-reqtext="专业班级不能为空"  value="{{student.class_name}}" class="layui-input">
             </div>
         </div>
 
@@ -66,7 +71,7 @@
         form.on('submit(saveBtn)', function (data) {
             $.ajax({
                 url:'/api/student',
-                type:'post',
+                type:'put',
                 data:data.field,
                 success:function(res){
                     if(res.code==0){

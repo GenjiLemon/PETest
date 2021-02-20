@@ -111,16 +111,27 @@ def addStudent(student:Student):
        print(e)
        return False
    return True
+def updateStudent(student):
+    mstudent=Student.query.get(student.id)
+    if mstudent:
+        mstudent.name = student.name
+        mstudent.sex = student.sex
+        mstudent.student_number = student.student_number
+        mstudent.college_name = student.college_name
+        mstudent.grade = student.grade
+        mstudent.class_name = student.class_name
+        db.session.commit()
+        return True
+    return False
 #查询一个年级学生情况
 def getStudentSumByGrade(grade):
     res = db.session.execute(
         "SELECT s.sex,COUNT(s.sex) FROM student s WHERE grade='{}' GROUP BY s.sex ".format(grade))
     ret={}
-    res=list()
     #按照返回的情况是sex先0后1
     ret['girl_num']=0
     ret['boy_num'] = 0
-    for e in res:
+    for e in list(res):
         if e[0]==0:
             ret['girl_num']=e[1]
         else:
