@@ -24,7 +24,9 @@ def school_student():
     elif request.method=="GET":
         args=request.args.to_dict()
         data=service.findStudents(session.get('school_id'),
-                                  name=args.get('name',None),number=args.get('student_number',None),college=args.get('college_name',None),grade=args.get('grade',None))
+                                  name=args.get('name',None),number=args.get('student_number',None),
+                                  college=args.get('college_name',None),grade=args.get('grade',None),
+                                  class_name=args.get('class_name',None),sex=args.get('sex',None))
         return jsonRet(data=data)
     elif request.method=="DELETE":
         id=request.form.get('id',None)
@@ -49,13 +51,47 @@ def school_student():
             return jsonRet()
         else: return jsonRet(-1,"更新失败")
     else: return jsonRet(-1)
+
+@api.route('/testingStudent',methods=["GET","POST"])
+def school_testingStudent():
+    if request.method=="GET":
+        pass
+    if request.method=="POST":
+        idsstr=request.form.get('student_ids',None)
+        if idsstr:
+            print(idsstr)
+            ids=idsstr.split(",")
+            map(int,ids)
+            ret={}
+            ret['total_num']=len(ids)
+            ret['success_num']=service.selectStudents(ids,getNowTestingYear())
+            return jsonRet(data=ret)
+        else:return jsonRet(-1,"没有找到id参数")
+    else: abort(404)
+
+#获取历史体测成绩抽取情况
+@api.route('/getTestingSelectionBefore')
+def school_getTestingSelectionBefore():
+    data=service.getTestingStudentSumBefore(getNowTestingYear(),session['school_id'])
+    count=len(data)
+    return jsonRet(data=data,count=count)
+
 #获取每个年级的学生名册情况
 @api.route('/gradeStudent',methods=["GET"])
 def school_gradeStudent():
-    data=service.getStudentSums()
+    data=service.getStudentSums(session['school_id'])
     #加个id栏
     data=addIdColumn(data)
     count= len(data)
+    return jsonRet(data=data,count=count)
+
+#获取每个年级的学生体测情况
+@api.route('/testingGradeStudent',methods=["GET"])
+def school_testingGradeStudent():
+    year=getNowTestingYear()
+    data=service.getTestingStudentSums(year,session['school_id'])
+    #加个id栏
+    count=len(data)
     return jsonRet(data=data,count=count)
 @api.route("/systemInit",methods=['GET'])
 def getSystemInit(type=1):

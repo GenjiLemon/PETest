@@ -31,16 +31,16 @@ from app.service import *
 # print(pn.items)
 # for e in pn.items:
 #     print(e.name)
-from flask.json import JSONEncoder, jsonify
-app_ctx = app.app_context()
-app_ctx.push()
+# from flask.json import JSONEncoder, jsonify
+# app_ctx = app.app_context()
+# app_ctx.push()
+#
+# class Ha():
+#     name=1
+#     sex=1
+#     def serializable(self):
+#         return self.name,self.sex
+# a=Ha()
 
-class Ha():
-    name=1
-    sex=1
-    def serializable(self):
-        return self.name,self.sex
-a=Ha()
-
-
-print(jsonify(a))
+d=TestingStudent.query.join(Student).filter(Student.sex==1).all()
+print(d)

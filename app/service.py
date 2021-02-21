@@ -4,9 +4,14 @@ from app.models import *
 from . import utils
 import os
 
+from .utils import gradeToInt
+
+
 #**************账户begin**************
 #登录
 #返回账户类型，1学校，2省厅，0错误
+
+
 def login(username,password):
     # account=Account.query.filter_by(username=username).
     pass
@@ -93,6 +98,7 @@ def importScore():
 
 #**************学校端begin**************
 #导入学生信息
+
 def importStudent(filename,school_id):
     file_root_path=r"F:/zanproject/高校体测数据处理系统/code/tests/"
     filepath=os.path.join(file_root_path,filename)
@@ -111,6 +117,7 @@ def addStudent(student:Student):
        print(e)
        return False
    return True
+
 def updateStudent(student):
     mstudent=Student.query.get(student.id)
     if mstudent:
@@ -123,10 +130,11 @@ def updateStudent(student):
         db.session.commit()
         return True
     return False
+
 #查询一个年级学生情况
-def getStudentSumByGrade(grade):
+def getStudentSumByGrade(grade,school_id):
     res = db.session.execute(
-        "SELECT s.sex,COUNT(s.sex) FROM student s WHERE grade='{}' GROUP BY s.sex ".format(grade))
+        "SELECT s.sex,COUNT(s.sex) FROM student s WHERE grade='{}' and school_id={} GROUP BY s.sex ".format(grade,school_id))
     ret={}
     #按照返回的情况是sex先0后1
     ret['girl_num']=0
@@ -140,15 +148,15 @@ def getStudentSumByGrade(grade):
     ret['grade']=grade
     return ret
 #查询每个年级学生的情况
-def getStudentSums():
+def getStudentSums(school_id):
     sums=[]
     #先查出所有的grade，再拿grade查出每个年级的情况
     res=Student.query.with_entities(Student.grade).distinct().order_by(Student.grade.desc()).all()
     for e in res:
-        sums.append(getStudentSumByGrade(e[0]))
+        sums.append(getStudentSumByGrade(e[0],school_id))
     return sums
 #查询学生
-def findStudents(schoolid,name=None,number=None,college=None,grade=None):
+def findStudents(schoolid,name=None,number=None,college=None,grade=None,class_name=None,sex=None):
     filter_list=[]
     filter_list.append(Student.school_id==schoolid)
     if name:
@@ -159,20 +167,109 @@ def findStudents(schoolid,name=None,number=None,college=None,grade=None):
         filter_list.append(Student.college_name==college)
     if grade:
         filter_list.append(Student.grade==grade)
+    if class_name:
+        filter_list.append(Student.class_name==class_name)
+    if sex:
+        filter_list.append(Student.sex==sex)
     return Student.query.filter(*filter_list).all()
 #选择学生
 #传入学生id的list
-def selectStudent(schoolid,studentids):
-    pass
+def selectStudents(studentids,year:int):
+    success_num=0
+    for id in studentids:
+        student=Student.query.get(id)
+        if student:
+            if TestingStudent.query.filter(TestingStudent.student_id==id).first()==None:
+                testingStudent=TestingStudent()
+                testingStudent.year=year
+                # year等于2018 说明2018-2019年的体测，2018级的学生属于大一
+                testingStudent.level=year-gradeToInt(student.grade)+1
+                testingStudent.student_id=student.id
+                testingStudent.school_id=student.school_id
+                db.session.add(testingStudent)
+                #记录成功添加一个体测学生
+                success_num=success_num+1
+    db.session.commit()
+    return success_num
+#查询指定年抽取人数情况
+#查询一个年级体测学生情况
+def getTestingStudentSumByGrade(grade,year,school_id):
+    res = db.session.execute(
+        "SELECT s.sex,COUNT(s.sex) FROM testingstudent ts INNER JOIN student s ON ts.student_id=s.id WHERE ts.year={} AND s.grade='{}' AND s.school_id={}  GROUP BY s.sex ".format(year,grade,school_id))
+    ret={}
+    #按照返回的情况是sex先0后1
+    ret['girl_num']=0
+    ret['boy_num'] = 0
+    for e in list(res):
+        if e[0]==0:
+            ret['girl_num']=e[1]
+        else:
+            ret['boy_num']=e[1]
+    ret['total_num']=ret['girl_num']+ret['boy_num']
+    ret['grade']=grade
+    return ret
+
+#获取历史体测情况
+def getTestingStudentSumBefore(nowyear,school_id):
+    #先获取所有的年
+    res=TestingStudent.query.with_entities(TestingStudent.year).filter(TestingStudent.school_id==school_id,TestingStudent.year<nowyear).distinct().all()
+    ret=[]
+    if res:
+        for e in res:
+            #每年的数据根据审核上交的情况来获取
+            selection=StudentSelection.query.filter(StudentSelection.year==e[0],StudentSelection.school_id==school_id).first()
+            temp={}
+            temp['boy_num']=selection.boy
+            temp['girl_num']=selection.girl
+            temp['year']=e[0]
+            ret.append(temp)
+        return ret
+    return ret
+
+
+#查询指定年每个年级体测学生的情况
+def getTestingStudentSums(year:int,school_id):
+    #year为2018代表体测年2018，及2018-2019
+    sums=[]
+    #先查出所有的grade，再拿grade查出每个年级的情况
+    res=TestingStudent.query.join(Student).filter().with_entities(Student.grade).filter(TestingStudent.year==year).distinct().order_by(Student.grade.desc()).all()
+    for e in res:
+        sums.append(getTestingStudentSumByGrade(e[0],year,school_id))
+    return sums
 
 #查询单个学生成绩
-def getStudentScore(schoolid,number=None,name=None):
+def getStudentScore(student_id,school_id,year):
     pass
 
 #筛选查询成绩
-#年级，1，2，3，4大一大二大三大四
-def getMultipleStudentScore(schoolid,grade=None,college=None,classname=None):
-    pass
+def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None):
+    filter_list = []
+    filter_list.append(TestingStudent.school_id == schoolid)
+    if name:
+        filter_list.append(Student.name == name)
+    if number:
+        filter_list.append(Student.student_number == number)
+    if college:
+        filter_list.append(Student.college_name == college)
+    if grade:
+        filter_list.append(Student.grade == grade)
+    if year:
+        filter_list.append(TestingStudent.year == year)
+    res=TestingStudent.query.join(Student).filter(*filter_list).all()
+    ret=[]
+    for e in res:
+        studentscore={}
+        studentscore['id']=e.student.id
+        studentscore['college_name']=e.student.college_name
+        studentscore['grade']=e.student.grade
+        studentscore['class_name']=e.student.class_name
+        studentscore['name']=e.student.name
+        studentscore['sex']=e.student.sex
+        studentscore['student_number']=e.student.student_number
+        studentscore['year']=e.year
+        studentscore['score']=e.score
+        ret.append(studentscore)
+    return ret
 
 #获取学校人数、分数排名等
 def getSchoolScore(schoolid,year):

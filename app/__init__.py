@@ -7,10 +7,11 @@ app.secret_key="I9XZH67Pb%0I"
 db = SQLAlchemy(app)
 #顺序生成视图、模型、创建数据库等
 from app import views,models
-debug=True
+app.debug = True
+
 
 #debug=True
-if not debug:
+if not app.debug:
     from app import db_create
 
 from app import service

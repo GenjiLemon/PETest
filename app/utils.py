@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from flask import jsonify
+import datetime
 
 def objToDict(obj):
     ret={}
@@ -13,6 +14,8 @@ def objToDict(obj):
     return ret
 
 def jsonRet(code=0,msg="",data=None,count=None):
+    print("jsonret 得到的数据为")
+    print(data)
     map={
         "code":code,
         "msg":msg,
@@ -35,3 +38,20 @@ def addIdColumn(data):
         e['id']=th
         th=th+1
     return data
+#用来转化学生类中的str grade
+def gradeToInt(s):
+    try:
+        return int(s)
+    except:
+        if s[-1]=="级" and len(s)==5:
+            return int(s[0:4])
+        else:
+            raise Exception("grade error")
+
+def getNowTestingYear():
+    #获取当前体测年份，目前采取根据时间获取的方法
+    today = datetime.date.today()
+    year=today.year
+    if today.month<9:
+        year=year-1
+    return year

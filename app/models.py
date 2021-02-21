@@ -11,7 +11,6 @@ class School(db.Model):
     code=db.Column(db.String(10),unique=True)       #学校代码
     type=db.Column(db.String(2))                    #学校类别，“本科”，“专科”
 
-    students=db.relationship('Student',backref='school')    #学生一对多
 
 #学生类
 class Student(db.Model):
@@ -19,7 +18,7 @@ class Student(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String(30),nullable=False)
     sex=db.Column(db.Integer)
-    student_number=db.Column(db.String(20),nullable=False,unique=True)   #学号
+    student_number=db.Column(db.String(20),nullable=False)   #学号
     college_name=db.Column(db.String(30))                    #学院名称
     grade=db.Column(db.String(5))                           #年级
     class_name=db.Column(db.String(20))                      #班级名称
@@ -50,6 +49,7 @@ class TestingProject(db.Model):
     sex=db.Column(db.Integer,nullable=True)          #使用性别
     weight=db.Column(db.Float,nullable=True)        #项目权重
     create_time=db.Column(db.DateTime,default = datetime.datetime)               #创建时间
+    comment=db.Column(db.String(50))#备注
 
     standards=db.relationship('TestingStandard',backref='project')  #该项目下的标准
 
@@ -60,7 +60,8 @@ class TestingStandard(db.Model):
     name=db.Column(db.String(10))                   #标准名称（经常为分数）
     score=db.Column(db.Float,nullable=True)         #标准分数
     lower_data=db.Column(db.Float,nullable=True)     #量化后的数据的下界
-    grade=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
+    level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
+    comment=db.Column(db.String(50))#备注
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #项目外键id
 
@@ -73,6 +74,7 @@ class TestingScore(db.Model):
     create_time=db.Column(db.DateTime,default = datetime.datetime)               #添加时间
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #体测项目id
+    school_id=db.Column(db.Integer,db.ForeignKey('school.id'))  #为了减少查询，增加一点冗余
     student_id=db.Column(db.Integer,db.ForeignKey('testingstudent.id'),nullable=False)  #体测学生id
 
 #体测学生
@@ -82,9 +84,10 @@ class TestingStudent(db.Model):
     year=db.Column(db.Integer,nullable=False)       #抽测年份
     score=db.Column(db.Float)                       #总分成绩
     comment=db.Column(db.String(255))               #备注
-    grade=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
+    level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
 
     student_id=db.Column(db.Integer,db.ForeignKey('student.id'),nullable=False) #学生id外键
+    school_id=db.Column(db.Integer,db.ForeignKey('school.id'),nullable=False)#为了节省查询，牺牲一点冗余
     student=db.relationship('Student',uselist=False)    #建立学生关系
 
 #学校成绩
