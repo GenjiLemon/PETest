@@ -42,5 +42,5 @@ from app.service import *
 #         return self.name,self.sex
 # a=Ha()
 
-d=TestingStudent.query.join(Student).filter(Student.sex==1).all()
-print(d)
+a=db.session.execute("insert into school (name) values('1') ")
+print(a)

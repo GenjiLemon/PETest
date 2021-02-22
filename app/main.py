@@ -1,3 +1,5 @@
+import functools
+
 from flask import Blueprint, render_template, redirect, send_from_directory, url_for, session, request, jsonify
 from app import app,service,db,models
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -6,13 +8,25 @@ from .utils import jsonRet
 
 @app.before_request
 def debug_login(*args, **kwargs):
+    return
     session['school_id'] = 1
     session['user_id'] = 1
 
+def login_required(func):
+    @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
+    def inner(*args,**kwargs):
+        userid = session.get('user_id')
+        print('获取session  userid',userid)
+        if not  userid:
+            return redirect('/login')
+        else:
+            return func(*args,**kwargs)
+    return inner
+
 @app.route("/")
 def index():
-    #return redirect('/login')
-    return redirect('/school/index')
+    #进来旧先登录
+    return redirect('/login')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -20,6 +34,7 @@ def page_not_found(e):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    #如果登录了，就直接跳转
     if session.get('user_id'):
         return redirect("/school/index")
     #省厅方式没写
@@ -41,3 +56,16 @@ def login():
                     return jsonRet(data={"url":"/province/index"})
         #没有提前返回的都错了
         return jsonRet(code=-1)
+
+
+@app.route('/changePassword')
+@login_required
+def changePassword():
+    return render_template('changePassword.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    service.logout()
+    return redirect('/login')
+

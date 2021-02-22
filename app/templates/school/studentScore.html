@@ -47,7 +47,7 @@
 							</div>
 						 </div>
                         <div class="layui-inline">
-                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                            <button type="submit" class="layui-btn layui-btn-primary"  id="search" lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
                         </div>
                     </div>
                 </form>
@@ -73,7 +73,7 @@
 
         table.render({
             elem: '#currentTableId',
-            data:[]
+            data:[],
             toolbar: 'true',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -87,7 +87,7 @@
                 {field: 'class_name', title: '专业班级'},
                 {field: 'name', title: '姓名'},
                 {field: 'sex',  title: '性别'},
-				{field: 'student_number',  title: '学号', sort: true, minWidth: 150}
+				{field: 'student_number',  title: '学号', sort: true, minWidth: 150},
                 {field: 'year',  title: '体测年份'},
                 {field: 'score',  title: '总分'},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
@@ -103,10 +103,13 @@
 		
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            table.reload('currentTableId', {
-                $.get("/api/
-            });
+            $.get("/api/testingStudent",data.field,function(res){
+                newdata=res.code==0?res.data:[];
+                table.reload("currentTableId",{
+                    data:newdata
+                });
 
+            })
             return false;
         });
 		
@@ -116,10 +119,23 @@
         table.on('tool(currentTableFilter)', function (obj) {
 		    var data = obj.data;
 		    if (obj.event === 'detail') {
-				console.log(data);
+		    console.log(data);
+				var content = miniPage.getHrefContent('/school/scoreDetail?id='+data.id);
+                var openWH = miniPage.getOpenWidthHeight();
+
+                var index = layer.open({
+                    title: data.name,
+                    type: 1,
+                    shade: 0.2,
+                    shadeClose: true,
+                    content: content
+                });
 		    }
 		});
        
-
+       var refreshTable=function(){
+            $('#search').click();
+        };
+        refreshTable();
     });
 </script>

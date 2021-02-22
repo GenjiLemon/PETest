@@ -1,4 +1,6 @@
 #此文件为中间服务类
+from flask import session
+from werkzeug.security import generate_password_hash,check_password_hash
 from app import db,app
 from app.models import *
 from . import utils
@@ -15,14 +17,24 @@ from .utils import gradeToInt
 def login(username,password):
     # account=Account.query.filter_by(username=username).
     pass
-
+def logout():
+    session.pop('user_id')
+    session.pop('school_id')
 #创建学校账户
 def createAccount(username,password,schoolid):
     pass
 
 #根据账户名更换密码
-def changePassword(username,password):
-    pass
+def changePassword(user_id,old_password,new_password):
+    user=Account.query.get(user_id)
+    if user:
+        if check_password_hash(user.password,old_password):
+            user.password=generate_password_hash(new_password)
+            db.session.commit()
+            return True
+        else: return "旧密码错误!"
+    else:
+        return "用户未找到！"
 #**************账户end**************
 
 
@@ -238,8 +250,16 @@ def getTestingStudentSums(year:int,school_id):
     return sums
 
 #查询单个学生成绩
-def getStudentScore(student_id,school_id,year):
-    pass
+def getStudentScore(tstudent_id):
+    #注意是从testingstudent里查
+    res=db.session.execute(
+        "SELECT tp.name ,ts.score FROM  testingscore ts JOIN Testingproject tp ON ts.project_id=tp.id WHERE ts.student_id={}".format(tstudent_id)
+    )
+    ret={}
+    for e in res:
+        #0是name，1是score
+        ret[e[0]]=e[1]
+    return ret
 
 #筛选查询成绩
 def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None):
@@ -259,7 +279,8 @@ def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=No
     ret=[]
     for e in res:
         studentscore={}
-        studentscore['id']=e.student.id
+        #拿的因该是testingstudent的id
+        studentscore['id']=e.id
         studentscore['college_name']=e.student.college_name
         studentscore['grade']=e.student.grade
         studentscore['class_name']=e.student.class_name

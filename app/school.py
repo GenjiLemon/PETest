@@ -1,31 +1,49 @@
+import functools
+
 from flask import Blueprint, render_template, redirect, send_from_directory, url_for, session, request
 from werkzeug.exceptions import abort
 
-from app import app,service,db,models
+from app import app, service, db, models, utils
+
 school = Blueprint('school',__name__)
 
 
-
+def login_required(func):
+    @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
+    def inner(*args,**kwargs):
+        userid = session.get('user_id')
+        print('获取session  userid',userid)
+        if not  userid:
+            return redirect('/login')
+        else:
+            return func(*args,**kwargs)
+    return inner
 #********页面访问********
-@school.route('/',methods=['GET'])
-def defaultIndex():
-    return redirect(url_for('/school/index'))
+# @school.route('/',methods=['GET'])
+# def defaultIndex():
+#     return redirect(url_for('/school/index'))
 
 @school.route('/index',methods=['GET'])
+@school.route('/',methods=['GET'])
+@login_required
 def index():
-    return render_template('school/index.html')
+    school=models.School.query.get(session['school_id'])
+    return render_template('school/index.html',school=school)
 
 @school.route('/home',methods=['GET'])
+@login_required
 def home():
     return render_template('school/welcome-1.html')
 
 @school.route('/addStudent',methods=['GET'])
+@login_required
 def addStudent():
     return render_template('school/addStudent.html')
 
 @school.route('/editStudent',methods=['GET'])
+@login_required
 def editStudent():
-    id=request.args.get('id',None)
+    id=request.args.get('id')
     if id==None:
         abort(404)
     else:
@@ -36,21 +54,35 @@ def editStudent():
 
 
 @school.route('/schoolScore',methods=['GET'])
+@login_required
 def schoolScore():
     return render_template('school/schoolScore.html')
 
 @school.route('/selectStudent',methods=['GET'])
+@login_required
 def selectStudent():
     return render_template('school/selectStudent.html')
 
 @school.route('/studentScore',methods=['GET'])
+@login_required
 def studentScore():
-    return render_template('school/studentScore.html')
+    nowyear=utils.getNowTestingYear()
+    return render_template('school/studentScore.html',nowyear=nowyear)
 
 @school.route('/uploadStudent',methods=['GET'])
+@login_required
 def uploadStudent():
     return render_template('school/uploadStudent.html')
 
 @school.route('/gradeStudent',methods=['GET'])
+@login_required
 def yearStudent():
     return render_template('school/gradeStudent.html')
+
+@school.route('/scoreDetail',methods=['GET'])
+@login_required
+def scoreDetail():
+    id=request.args.get('id')
+    if id==None :abort(404)
+    scores=service.getStudentScore(id)
+    return render_template('school/scoreDetail.html',scores=scores)
