@@ -36,7 +36,12 @@ def page_not_found(e):
 def login():
     #如果登录了，就直接跳转
     if session.get('user_id'):
-        return redirect("/school/index")
+        userid=session['user_id']
+        user=models.Account.query.get(userid)
+        if user.type == 1:
+            return redirect("/school/index")
+        elif user.type == 2:
+            return redirect("/province/index")
     #省厅方式没写
 
     if request.method == 'GET':
@@ -53,6 +58,8 @@ def login():
                     session['school_id'] = user.school_id
                     return jsonRet(data={"url":"/school/index"})
                 elif user.type==2:
+                    session['user_id'] = user.id
+                    session['secret']='faybaba'
                     return jsonRet(data={"url":"/province/index"})
         #没有提前返回的都错了
         return jsonRet(code=-1)

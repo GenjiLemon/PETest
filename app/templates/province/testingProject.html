@@ -1,0 +1,102 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+		<script type="text/html" id="toolbarDemo">
+		    <div class="layui-btn-container">
+		        <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 新增体测项目 </button>
+		    </div>
+		</script>
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+		<script type="text/html" id="currentTableBar">
+		    <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑项目标准</a>
+		</script>
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+			
+		data=[
+			{
+				id:1,
+				name:"50米",
+				sex:"男",
+				weight:0.2,
+				comment:"备注"
+			},
+			{
+				id:2,
+				name:"50米",
+				sex:"女",
+				weight:0.2,
+				comment:"备注"
+			}
+		]
+        table.render({
+            elem: '#currentTableId',
+			toolbar: '#toolbarDemo',
+            data:data,
+            cols: [[
+                {field: 'id', title: '序号'},
+				{field: 'name', title: '项目名称'},
+                {field: 'sex', title: '性别'},
+				{field: 'weight', title: '权重',edit:"text"},
+				{field: 'comment', title: '备注',edit:"text"},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,
+            page: true,
+            skin: 'line'
+        });
+		
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+				miniPage.hashChange("/province/testingStandard?id="+data.id);
+            }
+        });
+		
+		table.on('toolbar(currentTableFilter)', function (obj) {
+		    if (obj.event === 'add') {   // 监听添加操作
+		        var content = miniPage.getHrefContent('/province/addProject');
+		        var openWH = miniPage.getOpenWidthHeight();
+		
+		        var index = layer.open({
+		            title: '添加体测项目',
+		            type: 1,
+		            shade: 0.2,
+		            maxmin:true,
+		            shadeClose: true,
+		            area: [openWH[0] + 'px', openWH[1] + 'px'],
+		            offset: [openWH[2] + 'px', openWH[3] + 'px'],
+		            content: content,
+		        });
+		        $(window).on("resize", function () {
+		            layer.full(index);
+		        });
+		    } 
+		});
+		table.on('edit(currentTableFilter)', function(obj){ 
+		  // console.log(obj.value); //得到修改后的值
+		  // console.log(obj.field); //当前编辑的字段名
+		  // console.log(obj.data); //所在行的所有相关数据  
+		  var fieldname=obj.field
+		  var value=obj.value
+		  $.ajax({
+		     url: '/api/project',
+		     type: 'PUT',
+			 data:{fieldname:value},
+		     success: function(res) {
+				if(res.code!=0){
+					layer.msg("修改失败！"+res.msg);
+				}
+		     }
+			 });
+		});
+
+    });
+</script>

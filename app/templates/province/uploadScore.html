@@ -1,0 +1,39 @@
+<link rel="stylesheet" href="/static/layuimini/lib/jq-module/zyupload/skins/zyupload-1.0.0.min.css" media="all">
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+		<div id="zyupload" class="zyupload"></div>
+	</div>	
+</div>
+
+
+<script src="/static/layuimini/lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="/static/layuimini/lib/jq-module/zyupload/zyupload-1.0.0.min.js" charset="utf-8"></script>
+<script type="text/javascript">
+    $(function () {
+        // 初始化插件
+        $("#zyupload").zyUpload({
+            width: "650px",                 // 宽度
+            height: "400px",                 // 宽度
+            itemWidth: "140px",                 // 文件项的宽度
+            itemHeight: "115px",                 // 文件项的高度
+            url: "/api/uploadScore",  // 上传文件的路径
+            fileType: ["xls", "xlsx"],// 上传文件的类型
+            fileSize: 51200000,                // 上传文件的大小
+            multiple: false,                    // 是否可以多个文件上传
+            dragDrop: true,                    // 是否可以拖动上传文件
+            tailor: false,                    // 是否可以裁剪图片
+            del: true,                    // 是否可以删除文件
+            finishDel: true,  				  // 是否在上传文件完成后删除预览
+
+            onSuccess: function (file, response) {          // 文件上传成功的回调方法
+                res=$.parseJSON(response);
+                layer.alert("上传成功！"+res.msg,{icon:1})
+            },
+            onFailure: function (file, response) {          // 文件上传失败的回调方法
+                res=$.parseJSON(response);
+                layer.alert("上传失败！"+res.msg,{icon:1})
+            }
+        });
+
+    });
+</script>

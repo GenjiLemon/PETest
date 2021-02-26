@@ -42,5 +42,8 @@ from app.service import *
 #         return self.name,self.sex
 # a=Ha()
 
-a=db.session.execute("insert into school (name) values('1') ")
-print(a)
+# a=db.session.execute("insert into school (name) values('1') ")
+# print(a)
+
+from werkzeug.security import generate_password_hash,check_password_hash
+print(generate_password_hash("admin"))

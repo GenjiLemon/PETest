@@ -1,0 +1,120 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+        <script type="text/html" id="currentTableBar">
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="check">审核</a>
+        </script>
+		
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+			
+		var data2=[
+			{
+				"id":1,
+				"name":"zju",
+				"total_num":100,
+				"create_time":"2020-02-20 18:00:00"
+			},
+			{
+				"id":2,
+				"name":"zjnu",
+				"total_num":100,
+				"create_time":"2020-02-20 18:03:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			},
+			{
+				"id":3,
+				"name":"jliu",
+				"total_num":300,
+				"create_time":"2020-02-20 18:01:00"
+			}
+			
+	
+		]
+		var data1=[
+			{
+				"id":1,
+				"name":"zju",
+				"total_num":100,
+				"create_time":"2020-02-20 18:00:00"
+			},
+			{
+				"id":2,
+				"name":"zjnu",
+				"total_num":100,
+				"create_time":"2020-02-20 18:03:00"
+			}]
+        table.render({
+            elem: '#currentTableId',
+            data:data1,
+            cols: [[
+                {field: 'id', title: '序号'},
+				{field: 'name', title: '学校名称'},
+                {field: 'total_num', title: '提交人数'},
+				{field: 'create_time', title: '提交时间'},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 5,
+            page: true,
+            skin: 'line'
+        });
+		
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'check') {
+				
+				miniPage.hashChange("/province/check");
+            }
+        });
+
+    });
+</script>

@@ -1,0 +1,116 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">年份</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="year" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">院校类别</label>
+                            <div class="layui-input-inline">
+                                <select name="school_type"  lay-verify="required">
+                                	<option value=""></option>
+                                	<option value="本科">本科</option>
+                                	<option value="专科">专科</option>
+                                </select>
+                            </div>
+						</div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">查看项目</label>
+                            <div class="layui-input-inline">
+                               <select name="project"  lay-verify="required">
+									<option value=""></option>
+									<option value="pass">总合格率排名</option>
+									<option value="good">总优良率排名</option>
+									<option value="4">大四总数据</option>
+									<option value="3">大三总数据</option>
+									<option value="2">大二总数居</option>
+									<option value="1">大一总数居</option>
+                               </select>
+                            </div>
+						</div>
+						
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+        
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+		form.render();
+		var data=[
+			{
+				'id':1,
+				'school_name':"zju",
+				'score':70.2,
+				'score_rank':1,
+				'pass_rate':"100%",
+				'pass_rank':1,
+				'good_rate':'60%',
+				'good_rank':2,
+				'excellent_rate':"60%",
+				'excelletn_rank':3
+			}
+	
+		]
+        table.render({
+            elem: '#currentTableId',
+            data:data,
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'id', title: '序号'},
+				{field: 'school_name', title: '学校名称'},
+                {field: 'score', title: '总得分'},
+				{field: 'score_rank', title: '总分排名'},
+				{field: 'pass_rate', title: '及格率'},
+				{field: 'pass_rank', title: '及格率排名'},
+				{field: 'good_rate', title: '良好率'},
+				{field: 'good_rank', title: '良好率排名'},
+				{field: 'excellent_rate', title: '合格率'},
+				{field: 'excelletn_rank', title: '合格率排名'}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            $.get('/',data=data.field,function(res){
+				if(res.code==0){
+					var newdata=res.data;
+					table.reload("currentTableId",{data:newdata});
+				}
+				
+			})
+        });
+
+       
+    });
+</script>

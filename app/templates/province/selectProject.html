@@ -1,0 +1,128 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+		<fieldset class="table-search-fieldset">
+		    <legend><span style="font-size: 18px;">体测项目选择</span></legend>
+			<div class="layui-container"> 
+				<div class="layui-row" >
+					<div class="layui-col-md6">
+						<div class="layui-row">
+							<div id="transfer_select_boy"></div> 
+						</div>
+						<div class="layui-row">
+							<button type="button" class="layui-btn" id="save_boy">保存</button>
+						</div>
+					</div>
+					<div  class="layui-col-md6">
+					   <div class="layui-row">
+					   	<div id="transfer_select_girl"></div> 
+					   </div>
+					   <div class="layui-row">
+					   	<button type="button" class="layui-btn" id="save_girl">保存</button>
+					   </div>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+		
+		<fieldset class="table-search-fieldset">
+			<legend><span style="font-size: 18px;">历史体测项目</span></legend>
+			<table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+			<script type="text/html" id="currentTableBar">
+				<a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="detail">查看详情</a>
+			</script>
+		</fieldset>
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element','transfer'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage,
+			transfer = layui.transfer;
+			
+			project_boy=[
+						{"value": "1", "title": "李白", "disabled": "", "checked": ""}
+						,{"value": "2", "title": "杜甫", "disabled": "", "checked": ""}
+						,{"value": "3", "title": "贤心", "disabled": "", "checked": ""},
+						];
+			transfer.render({
+			      elem: '#transfer_select_boy'  //绑定元素
+			      ,data:project_boy
+				  ,title:['男生项目列表','已选项目']
+			      ,id: 'transfer_boy' //定义索引
+			    }); 
+				
+			project_girl=[
+						{"value": "1", "title": "李白", "disabled": "", "checked": ""}
+						,{"value": "2", "title": "杜甫", "disabled": "", "checked": ""}
+						,{"value": "3", "title": "贤心", "disabled": "", "checked": ""},
+						];
+			transfer.render({
+			  elem: '#transfer_select_girl'  //绑定元素
+			  ,data: project_girl
+			  ,id: 'transfer_girl' //定义索引
+			});
+				
+			$('#save_boy').click(function(){
+				var boy_data = transfer.getData('transfer_boy');
+				console.log(boy_data);
+			});	
+			
+			$('#save_girl').click(function(){
+				var boy_data = transfer.getData('transfer_girl');
+				console.log(boy_data);
+			});	
+		data=[
+			{
+				id:1,
+				year:2020,
+				boy:4,
+				girl:4
+			},
+			{
+				id:2,
+				year:2019,
+				boy:4,
+				girl:4
+			}
+		]
+        table.render({
+            elem: '#currentTableId',
+            data:data,
+            cols: [[
+                {field: 'id', title: '序号'},
+				{field: 'year', title: '年'},
+                {field: 'boy', title: '男生项目（个）'},
+				{field: 'girl', title: '女生项目（个）'},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 10,
+            page: true,
+            skin: 'line'
+        });
+		
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'detail') {
+				console.log(data);
+				var content = miniPage.getHrefContent("/province/historyProject?year="+data.year);
+				var openWH = miniPage.getOpenWidthHeight();
+
+				var index = layer.open({
+					title: data.year+"年体测项目",
+					type: 1,
+					shade: 0.2,
+					shadeClose: true,
+					content: content
+				});
+            }
+        });
+		
+		
+		
+
+    });
+</script>

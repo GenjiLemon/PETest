@@ -1,0 +1,139 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+		<fieldset class="table-search-fieldset">
+		    <legend>选择年级</legend>
+		    <div style="margin: 10px 10px 10px 10px">
+		        <form class="layui-form layui-form-pane" lay-filter="serch_form" action="">
+		            <div class="layui-form-item">
+		                <div class="layui-inline">
+		                    <label class="layui-form-label">学校名称</label>
+		                    <div class="layui-input-inline">
+		                        <select name="level" lay-filter="level_select">
+									<option value=""></option>
+									<option value="1">大一</option>
+									<option value="2">大二</option>
+									<option value="3">大三</option>
+									<option value="4">大四</option>
+									<option value="5">大五</option>
+									<option value="6">大五以上</option>
+		                        </select>
+		                    </div>
+		                </div>
+		            </div>
+		        </form>
+		    </div>
+		</fieldset>
+		<script type="text/html" id="toolbarDemo">
+		    <div class="layui-btn-container">
+		        <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 新增一行 </button>
+		    </div>
+		</script>
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+		<script type="text/html" id="currentTableBar">
+			<a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="save">保存</a>
+			<a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="del">删除</a>
+		</script>
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+			
+		/**
+		 * 初始化表单，要加上，不然刷新部分组件可能会不加载
+		 */
+        form.render();
+		form.on('select(level_select)', function(data){
+		  $.get('/api/standard?level='+data.value,function(res){
+			  var newdata=res.code==0?res.data:[];
+			  table.reload('currentTableId', {
+			  				data:newdata
+			  });
+		  })
+		  
+		});
+		
+		data=[
+			{
+				id:1,
+				name:"3.0秒",
+				score:20,
+				bottom:3.0,
+				top:3.1,
+				level:"大一",
+				comment:"备注"
+			},
+			{
+				id:2,
+				name:"3.1秒",
+				score:20,
+				bottom:3.1,
+				top:3.2,
+				level:"大一",
+				comment:"备注"
+			}
+		]
+        table.render({
+            elem: '#currentTableId',
+			toolbar: '#toolbarDemo',
+            data:data,
+            cols: [[
+                {field: 'id', title: '序号'},
+				{field: 'name', title: '标准名称',edit:"text"},
+                {field: 'score', title: '换算分数',edit:"text"},
+				{field: 'bottom', title: '区间下限',edit:"text"},
+				{field: 'top', title: '区间上限',edit:"text"},
+				{field: 'level', title: '年级'},
+				{field: 'comment', title: '备注',edit:"text"},
+                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+            ]],
+            skin: 'line'
+        });
+		
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'save') {
+				$.each(data,function(key,value){
+					console.log(""+key+value);
+					if(key!='id'&&key!="comment"){
+						if(value==""){
+							layer.msg("存在项未填！");
+							return;
+						}
+					}
+					//这里发送请求
+				})
+            }
+			else if(obj.event==='del'){
+				layer.confirm('真的删除么', function(index){
+				      obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+				      layer.close(index);
+				      //向服务端发送删除指令
+				    });
+			}
+        });
+		
+		table.on('toolbar(currentTableFilter)', function (obj) {
+		    if (obj.event === 'add') {   
+		        // var level=$(".level").val();//获取当前level选择项的值.
+		        var level= form.val("serch_form").level;
+				console.log(level);
+				if(level==""){
+					layer.msg('请先选择年级！')
+				}
+				else{
+					var oldData = table.cache["currentTableId"];
+					var data1={level:level};
+					oldData.push(data1);
+					table.reload('currentTableId',{data : oldData});
+				}
+		    } 
+		});
+		
+
+    });
+</script>

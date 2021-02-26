@@ -1,0 +1,22 @@
+<div class="layuimini-main">
+	<table class="layui-table" lay-skin="line">
+	 <colgroup>
+         <col width="300">
+	     <col width="200">
+	   </colgroup>
+	   <thead>
+	     <tr>
+	       <th>性别</th>
+	       <th>项目名</th>
+	     </tr> 
+	   </thead>
+	   <tbody>
+       {% for name,score in scores.items() %}
+	     <tr>
+	       <td>{{sex}}</td>
+	       <td>{{name}}</td>
+	     </tr>
+	     {% endfor%}
+	   </tbody>
+	</table>
+</div>

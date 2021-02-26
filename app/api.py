@@ -20,6 +20,19 @@ def login_required(func):
             return func(*args,**kwargs)
     return inner
 
+def admin_required(func):
+    @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
+    def inner(*args,**kwargs):
+        userid = session.get('user_id')
+        secret=session.get('secret')
+        print('获取session  userid',userid)
+        if userid==None or secret==None:
+            #api里返回错误代码而不是跳转
+            return jsonRet(-2,"您还未登录,请先登录！")
+        else:
+            return func(*args,**kwargs)
+    return inner
+
 @api.route('/student',methods=['GET','POST','PUT','DELETE'])
 @login_required
 def school_student():
@@ -125,8 +138,9 @@ def changePassword():
 
 @api.route("/systemInit",methods=['GET'])
 @login_required
-def getSystemInit(type=1):
-    if type==1:
+def getSystemInit():
+    type=request.args.get('type')
+    if type=='1':
         homeInfo= {
             "title":"首页",
             "href":"/school/home"
@@ -143,6 +157,25 @@ def getSystemInit(type=1):
             "menuInfo":menuInfo
         }
         return jsonify(init)
+    elif type=='2':
+        homeInfo = {
+            "title": "首页",
+            "href": "/province/home"
+        }
+        logoInfo = {
+            "title": "院校端",
+            "image": "/static/layuimini/images/logo.png",
+            "href": ""
+        }
+        menuInfo = __getMenuList(type)
+        init = {
+            "homeInfo": homeInfo,
+            "logoInfo": logoInfo,
+            "menuInfo": menuInfo
+        }
+        return jsonify(init)
+    else: return jsonRet('-1',msg="接口有误")
+
 
 def __getMenuList(type):
     menu=models.Systemmenu
@@ -162,11 +195,12 @@ def __buildChild(pid,type):
 
 @api.route("/uploadStudent", methods=["POST"])
 @login_required
-def uploadStudent():
+def school_uploadStudent():
     f = request.files.get('file',None)
     if f:
         WS = pd.read_excel(f)
         data=np.array(WS).tolist()
+        # 默认会去掉第一行，正好把中文头部去掉
         header=['college_name','grade','class_name','name','sex','student_number','school_id']
         school_id=session['school_id']
         for e in data:
@@ -180,31 +214,18 @@ def uploadStudent():
         return jsonRet(msg="新增了{}个学生".format(count))
     return jsonRet(-1,msg="没有找到上传文件")
 
-@api.route('/student-list')
-def studentlist():
-    return {
-  "code": 0,
-  "msg": "",
-  "count": 1000,
-  "data": [
-    {
-      "id": 1,
-      "college_name":"物理学院",
-	  "grade":2020,
-	  "class_name":"物理学",
-	  "name":"小明",
-	  "sex":"男",
-	  "student_number":"20202020202020",
-	  "comment":"备注"
-    },
-    {"id": 2,
-      "college_name":"数学学院",
-      "grade":2020,
-      "class_name":"数学应用数学",
-      "name":"小红",
-      "sex":"女",
-      "student_number":"20202020202021",
-      "comment":"备注"
-    }
-  ]
-}
+
+@api.route("/uploadSchool", methods=["POST"])
+@admin_required
+def province_uploadSchool():
+    f = request.files.get('file',None)
+    if f:
+        WS = pd.read_excel(f)
+        #默认会去掉第一行，正好把中文头部去掉
+        data=np.array(WS).tolist()
+        header=['name','code','type']
+        count= len(data)-1
+        service.quickInsert(models.School,header,data)
+        return jsonRet(msg="新增了{}个学校".format(count))
+    return jsonRet(-1,msg="没有找到上传文件")
+

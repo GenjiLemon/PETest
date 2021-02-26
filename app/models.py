@@ -59,7 +59,8 @@ class TestingStandard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name=db.Column(db.String(10))                   #标准名称（经常为分数）
     score=db.Column(db.Float,nullable=True)         #标准分数
-    lower_data=db.Column(db.Float,nullable=True)     #量化后的数据的下界
+    bottom=db.Column(db.Float,nullable=True)     #量化后的数据的下界
+    top=db.Column(db.Float,nullable=True)     #量化后的数据的上界
     level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
     comment=db.Column(db.String(50))#备注
 

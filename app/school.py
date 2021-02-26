@@ -8,7 +8,7 @@ from app import app, service, db, models, utils
 school = Blueprint('school',__name__)
 
 
-def login_required(func):
+def admin_required(func):
     @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
     def inner(*args,**kwargs):
         userid = session.get('user_id')
@@ -25,23 +25,23 @@ def login_required(func):
 
 @school.route('/index',methods=['GET'])
 @school.route('/',methods=['GET'])
-@login_required
+@admin_required
 def index():
     school=models.School.query.get(session['school_id'])
     return render_template('school/index.html',school=school)
 
 @school.route('/home',methods=['GET'])
-@login_required
+@admin_required
 def home():
     return render_template('school/welcome-1.html')
 
 @school.route('/addStudent',methods=['GET'])
-@login_required
+@admin_required
 def addStudent():
     return render_template('school/addStudent.html')
 
 @school.route('/editStudent',methods=['GET'])
-@login_required
+@admin_required
 def editStudent():
     id=request.args.get('id')
     if id==None:
@@ -54,33 +54,33 @@ def editStudent():
 
 
 @school.route('/schoolScore',methods=['GET'])
-@login_required
+@admin_required
 def schoolScore():
     return render_template('school/schoolScore.html')
 
 @school.route('/selectStudent',methods=['GET'])
-@login_required
+@admin_required
 def selectStudent():
     return render_template('school/selectStudent.html')
 
 @school.route('/studentScore',methods=['GET'])
-@login_required
+@admin_required
 def studentScore():
     nowyear=utils.getNowTestingYear()
     return render_template('school/studentScore.html',nowyear=nowyear)
 
 @school.route('/uploadStudent',methods=['GET'])
-@login_required
+@admin_required
 def uploadStudent():
     return render_template('school/uploadStudent.html')
 
 @school.route('/gradeStudent',methods=['GET'])
-@login_required
+@admin_required
 def yearStudent():
     return render_template('school/gradeStudent.html')
 
 @school.route('/scoreDetail',methods=['GET'])
-@login_required
+@admin_required
 def scoreDetail():
     id=request.args.get('id')
     if id==None :abort(404)
