@@ -113,11 +113,15 @@
 
             onSuccess: function (file, response) {          // 文件上传成功的回调方法
                 res=$.parseJSON(response);
-                layer.alert("上传成功！"+res.msg,{icon:1})
+                if(res.code==0){
+                     layer.alert("导入成功！"+res.msg,{icon:1})
+                }
+                else {
+                    layer.alert("导入失败！"+res.msg,{icon:2})
+                }
             },
             onFailure: function (file, response) {          // 文件上传失败的回调方法
-                res=$.parseJSON(response);
-                layer.alert("上传失败！"+res.msg,{icon:1})
+                layer.alert("文件上传失败")
             }
         });
 

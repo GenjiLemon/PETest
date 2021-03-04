@@ -22,7 +22,7 @@
 		<div class="layui-form-item">
 		    <label class="layui-form-label required">确认密码</label>
 		    <div class="layui-input-block">
-		        <input type="text" name="verify_password" lay-verify="required" lay-reqtext="密码不能为空"  value="" class="layui-input">
+		        <input type="text" name="verify_password" lay-verify="required|confirmPass" lay-reqtext="密码不能为空"  value="" class="layui-input">
 		    </div>
 		</div>
 		
@@ -50,19 +50,23 @@
 
         //监听提交
         form.on('submit(saveBtn)', function (data) {
-            var index = layer.alert(JSON.stringify(data.field), {
-                title: '最终的提交信息'
-            }, function () {
-
-                // 关闭弹出层
-                layer.close(index);
-                layer.close(parentIndex);
-
-            });
-
-
+            $.post('/api/account',data.field,function(res){
+                if(res.code==0){
+                    layer.msg("添加成功！")
+                    layer.close(parentIndex);
+                }
+                else{
+                    layer.msg("添加失败！"+res.msg)
+                }
+            })
             return false;
         });
+        form.verify({
+		  confirmPass:function(value){
+		          if($('input[name=password]').val() !== value)
+		              return '两次密码输入不一致！';
+		      }
+		});
 
     });
 </script>

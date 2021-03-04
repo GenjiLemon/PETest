@@ -14,7 +14,7 @@
                         </div>
 						
                         <div class="layui-inline">
-                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                            <button type="submit" id="search" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
                         </div>
                     </div>
                 </form>
@@ -23,14 +23,14 @@
 
         <script type="text/html" id="toolbarDemo">
             <div class="layui-btn-container">
-                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 添加 </button>
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn"  lay-event="add"> 添加 </button>
             </div>
         </script>
 
         <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
 
         <script type="text/html" id="currentTableBar">
-            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">修改密码</a>
             <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
         </script>
 
@@ -43,19 +43,10 @@
             form = layui.form,
             table = layui.table,
             miniPage = layui.miniPage;
-			
-		var data=[
-			{
-				"id":1,
-				"name":"zju",
-				"username":"zju",
-				"password":"zju"
-			}
-	
-		]
+
         table.render({
             elem: '#currentTableId',
-            data:data,
+            data:[],
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -77,23 +68,18 @@
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            var result = JSON.stringify(data.field);
-            layer.alert(result, {
-                title: '最终的搜索信息'
-            });
-
-            //执行搜索重载
-            table.reload('currentTableId', {
-                page: {
-                    curr: 1
+            $.get('/api/account',data=data.field,function(res){
+                if(res.code==0){
+                    newdata=res.data?res.data:[]
+                    table.reload('currentTableId',{data:newdata});
                 }
-                , where: {
-                    searchParams: result
-                }
-            }, 'data');
-
+            })
             return false;
         });
+        var renderTable=function(){
+            $("#search").click();
+        }
+        renderTable();
 
         /**
          * toolbar事件监听
@@ -112,6 +98,7 @@
                     area: [openWH[0] + 'px', openWH[1] + 'px'],
                     offset: [openWH[2] + 'px', openWH[3] + 'px'],
                     content: content,
+                    end:function(){renderTable();}
                 });
                 $(window).on("resize", function () {
                     layer.full(index);
@@ -119,34 +106,45 @@
             } 
         });
 
-        //监听表格复选框选择
-        table.on('checkbox(currentTableFilter)', function (obj) {
-            console.log(obj)
-        });
 
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'edit') {
-
-                var content = miniPage.getHrefContent('/province/addAccount');
-                var openWH = miniPage.getOpenWidthHeight();
-
-                var index = layer.open({
-                    title: '编辑账号信息',
-                    type: 1,
-                    shade: 0.2,
-                    maxmin:true,
-                    shadeClose: true,
-                    area: [openWH[0] + 'px', openWH[1] + 'px'],
-                    offset: [openWH[2] + 'px', openWH[3] + 'px'],
-                    content: content,
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
-                });
+                layer.prompt({title: '输入修改后的密码', formType: 1}, function(value, index){
+                    if(value==""){
+                        layer.msg("密码不能为空！");
+                    }
+                    else{
+                        $.ajax({
+                            url:'/api/account',
+                            data:{id:data.id,password:value},
+                            method:'PUT',
+                            success:function(res){
+                                if(res.code==0){
+                                    layer.msg("修改成功！");
+                                    layer.close(index);
+                                }
+                                else{
+                                    layer.msg("修改失败！"+res.msg)
+                                }
+                            }
+                        })
+                    }
+                })
                 return false;
             } else if (obj.event === 'delete') {
                 layer.confirm('真的删除行么', function (index) {
+
+                    $.ajax({
+                        url:'/api/account?id='+data.id,
+                        method:'DELETE',
+                        success:function(res){
+                            if(res.code==0){
+                                layer.msg("删除成功！")
+                            }
+                            else layer.msg("删除失败！"+res.msg)
+                        }
+                    })
                     obj.del();
                     layer.close(index);
                 });

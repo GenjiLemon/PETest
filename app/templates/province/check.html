@@ -1,8 +1,9 @@
 <div class="layuimini-container layuimini-page-anim">
     <div class="layuimini-main">
 
-		<div>学校名</div>
-		<div>申请备注</div>
+		<div>{{model['school_name']}}</div>
+		<div>{{model['comment']|default("无备注")}}</div>
+        <div style="display:none;" id="id">{{model['id']}}</div>
         <script type="text/html" id="toolbarDemo">
             <div class="layui-btn-container">
                 <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="checkTrue"> 审核通过 </button>
@@ -26,7 +27,7 @@
 
         table.render({
             elem: '#currentTableId',
-            url: 'api/student-list.json',
+            data:[],
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print', {
                 title: '提示',
@@ -42,8 +43,7 @@
                 {field: 'name', title: '姓名'},
                 {field: 'sex',  title: '性别'},
                 {field: 'student_number',  title: '学号', sort: true, minWidth: 150},
-                {field: 'comment',  title: '备注'},
-                {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
+                {field: 'comment',  title: '备注'}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 15,
@@ -51,18 +51,39 @@
             skin: 'line'
         });
 
+         $.get('/api/getTestingStudent?id='+$('#id').text(),function(res){
+            if(res.code==0){
+                newdata=res.data?res.data:[];
+                table.reload('currentTableId',{data:newdata});
+            }
 
+
+         });
         /**
          * toolbar事件监听
          */
         table.on('toolbar(currentTableFilter)', function (obj) {
             if (obj.event === 'checkTrue') {   // 监听审核通过
-                
-                
+                $.post('/api/checkTestingStudent',{id:$('#id').text(),status:1},function(res){
+                    if(res.code==0){
+                        miniPage.hashChange("/province/checkList");
+                        history.back(-1);
+                    }
+                    else{
+                        layer.msg("系统错误！"+res.msg);
+                    }
+                });
             } 
 			else if (obj.event === 'checkFalse') {   // 监听审核不通过
-                
-                
+                $.post('/api/checkTestingStudent',{id:$('#id').text(),status:0},function(res){
+                    if(res.code==0){
+                        layer.msg("审核成功");
+                        miniPage.hashChange("/province/checkList");
+                    }
+                    else{
+                        layer.msg("系统错误！"+res.msg);
+                    }
+                });
             } 
         });
     });

@@ -10,7 +10,7 @@ manage = Manager(app)
 migrate = Migrate(app, db)
 # manager是Flask-Script的实例，这条语句在flask-Script中添加一个db命令
 manage.add_command('db', MigrateCommand)
-##调用迁移的入口方法
+##调用迁移的入口方法cd .
 
 if __name__ == '__main__':
     manage.run()

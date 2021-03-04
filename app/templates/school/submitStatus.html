@@ -1,0 +1,70 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+		<div style="font-size: 19px; margin: 10px;">提交状态：{{model['status_word']}}</div>
+		<div style="font-size: 19px; margin: 10px;">提交备注：{{model['submit_comment']|default("")}}</div>
+		<div style="font-size: 19px; margin: 10px;">审核备注：{{model['confirm_comment']|default("")}}</div>
+        {% if model['status']==1 or model['status']==2 %}
+            <div ><button class="layui-btn layui-btn-disabled" >已提交</button></div>
+        {% elif model['status']==0 %}
+            <div ><button class="layui-btn layui-btn-lg" id="submit">重新提交</button></div>
+        {% elif model['status']==-1 %}
+            <div ><button class="layui-btn layui-btn-lg" id="submit">提交</button></div>
+        {% endif %}
+
+
+    </div>
+</div>
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
+
+
+        table.render({
+            elem: '#currentTableId',
+            url: '/api/testingGradeStudent',
+            toolbar: true,
+            defaultToolbar: ['filter', 'exports', 'print', {
+                title: '提示',
+                layEvent: 'LAYTABLE_TIPS',
+                icon: 'layui-icon-tips'
+            }],
+            cols: [[
+                {field: 'grade', title: '年级'},
+                {field: 'boy_num',  title: '男生人数'},
+                {field: 'girl_num', title: '女生人数'},
+				{field:'total_num',title:'总人数'}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        $('#submit').bind('click',function(){
+			layer.prompt({title: '请输入提交备注，没有则留空', value: ' '}, function(value, index){
+			  console.log("点击了提交");
+			  $.post('/api/submitStudent',{comment:value},function(res){
+			        if(res.code==0){
+			            layer.msg("提交成功！");
+			            layer.close(index);
+			            //动用主页的刷新，手动刷新界面
+                        $("a[data-refresh]").click();
+			        }
+			        else{
+			            layer.msg("提交失败！"+res.msg);
+			        }
+			  })
+
+			});
+		});
+
+
+
+    });
+</script>

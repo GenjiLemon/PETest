@@ -4,7 +4,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label required">项目名称</label>
             <div class="layui-input-block">
-                <input type="text" name="name" lay-verify="required" lay-reqtext="学校名称不能为空"  value="" class="layui-input">
+                <input type="text" name="name" lay-verify="required" lay-reqtext="体测项目名称不能为空"  value="" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
@@ -17,13 +17,13 @@
 		<div class="layui-form-item">
 		    <label class="layui-form-label required">权重</label>
 		    <div class="layui-input-block">
-		        <input type="text" name="weight" lay-verify="required" lay-reqtext="学校代码不能为空"  value="" class="layui-input">
+		        <input type="text" name="weight" lay-verify="required" lay-reqtext="权重不能为空"  value="" class="layui-input">
 		    </div>
 		</div>
 		<div class="layui-form-item">
-		    <label class="layui-form-label required">备注</label>
+		    <label class="layui-form-label ">备注</label>
 		    <div class="layui-input-block">
-		        <input type="text" name="comment" lay-verify="required" lay-reqtext="学校代码不能为空"  value="" class="layui-input">
+		        <input type="text" name="comment"    value="" class="layui-input">
 		    </div>
 		</div>
         <div class="layui-form-item">
@@ -50,7 +50,7 @@
 
         //监听提交
         form.on('submit(saveBtn)', function (data) {
-            $.post('/api/Project',data.field,function(res){
+            $.post('/api/project',data.field,function(res){
 				if(res.code==0){
 					layer.msg('添加成功！');
 					layer.close(parentIndex);

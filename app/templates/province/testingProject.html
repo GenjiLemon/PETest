@@ -19,26 +19,11 @@
             table = layui.table,
             miniPage = layui.miniPage;
 			
-		data=[
-			{
-				id:1,
-				name:"50米",
-				sex:"男",
-				weight:0.2,
-				comment:"备注"
-			},
-			{
-				id:2,
-				name:"50米",
-				sex:"女",
-				weight:0.2,
-				comment:"备注"
-			}
-		]
+
         table.render({
             elem: '#currentTableId',
 			toolbar: '#toolbarDemo',
-            data:data,
+            data:[],
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'name', title: '项目名称'},
@@ -56,10 +41,16 @@
         table.on('tool(currentTableFilter)', function (obj) {
             var data = obj.data;
             if (obj.event === 'edit') {
+            	//编辑项目标准
 				miniPage.hashChange("/province/testingStandard?id="+data.id);
             }
         });
-		
+		$.get('/api/project',function(res){
+			if(res.code==0){
+				newdata=res.data?res.data:[];
+				table.reload('currentTableId',{data:newdata});
+			}
+		})
 		table.on('toolbar(currentTableFilter)', function (obj) {
 		    if (obj.event === 'add') {   // 监听添加操作
 		        var content = miniPage.getHrefContent('/province/addProject');

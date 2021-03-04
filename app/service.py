@@ -19,7 +19,11 @@ def login(username,password):
     pass
 def logout():
     session.pop('user_id')
-    session.pop('school_id')
+    if session.get('secret')!=None:
+        #判断是院校还是省厅
+        session.pop('secret')
+    else:
+        session.pop('school_id')
 #创建学校账户
 def createAccount(username,password,schoolid):
     pass
@@ -39,59 +43,56 @@ def changePassword(user_id,old_password,new_password):
 
 
 #**************省厅begin**************
-def addSchool(name,type,code=None):
-    pass
 
-#批量添加
-#传入school的list
-def addAllSchool(schoollist):
-    pass
 
 #通过code或者name找学校
-def findSchool(code=None,name=None):
-    pass
+def findSchool(name=None,code=None):
+    filter_list = []
+    if name and name!='':
+        filter_list.append(School.name == name)
+    if code and code!='':
+        filter_list.append(School.code == code)
+    return School.query.filter(*filter_list).all()
 
-#通过id删除学校
-def delSchool(id):
-    pass
-
-#修改学校
-def editSchool(id,name=None,code=None,type=None):
-    pass
-
-#审核学校学生名单
-def confirmStudent(id):
-    pass
-
-#体测项目增加
-def addProject(name,sex,weight):
-    pass
-
-#体测项目修改
-def editProject(id,name=None,sex=None ,weight=None):
-    pass
-
-#删除体测项目
-def delProject(id):
-    pass
-
-#项目标准增加
-def addStandard(projectid,name,score,lowerdata,grade):
-    pass
-
-#项目标准修改
-def editStandard(id,name=None,score=None,lowerdata=None,grade=None):
-    pass
-
-#项目标准删除
-def delStandard(id):
-    pass
+#获取审核名单
+def getTestingStudent(school_id,year):
+    testingStudents=TestingStudent.query.filter(TestingStudent.school_id==school_id,TestingStudent.year==year).all()
+    res=[]
+    for e in testingStudents:
+        student=Student.query.get(e.student_id)
+        student.comment=e.comment
+        res.append(student)
+    return res
 
 #选择项目
 #传入id的list
-def selectProject(projectids,sex):
-    pass
+def selectProject(projectids,year):
+    old=ProjectSelection.query.filter(ProjectSelection.year==year).all()
+    #求出原来的id列表
+    oldids=[]
+    # 先处理删除的
+    for e in old:
+        oldids.append(e.project_id)
+        if e.project_id not in projectids:
+            db.session.delete(e)
+    #再处理添加的
+    for e in projectids:
+        if e not in oldids:
+            temp=ProjectSelection()
+            temp.year=year
+            temp.project_id=e
+            db.session.add(temp)
+    db.session.commit()
 
+#获取选择的项目
+def getSelectProjects(year,sex):
+    res = ProjectSelection.query.filter(ProjectSelection.year == year).all()
+    ret=[]
+    for e in res:
+        project=TestingProject.query.get(e.project_id)
+        if project.sex==sex:
+            ret.append(project)
+    return ret
 #删除选择的项目
 def delSelectProject(projectid,sex):
     pass
@@ -171,17 +172,17 @@ def getStudentSums(school_id):
 def findStudents(schoolid,name=None,number=None,college=None,grade=None,class_name=None,sex=None):
     filter_list=[]
     filter_list.append(Student.school_id==schoolid)
-    if name:
+    if name and name!='':
         filter_list.append(Student.name==name)
-    if number:
+    if number and number!='':
         filter_list.append(Student.student_number==number)
-    if college:
+    if college and college!='':
         filter_list.append(Student.college_name==college)
-    if grade:
+    if grade and grade!='':
         filter_list.append(Student.grade==grade)
-    if class_name:
+    if class_name and class_name!='':
         filter_list.append(Student.class_name==class_name)
-    if sex:
+    if sex and sex!='':
         filter_list.append(Student.sex==sex)
     return Student.query.filter(*filter_list).all()
 #选择学生
@@ -203,6 +204,35 @@ def selectStudents(studentids,year:int):
                 success_num=success_num+1
     db.session.commit()
     return success_num
+
+#创建审核
+def createSubmitStudent(school_id,year,comment):
+    ret=getTestingStudentNum(school_id,year)
+    boy=ret['boy']
+    girl=ret['girl']
+    studentSelection=StudentSelection()
+    studentSelection.year=year
+    studentSelection.boy=boy
+    studentSelection.girl=girl
+    studentSelection.submit=1
+    studentSelection.confirm=0
+    studentSelection.submit_comment=comment
+    studentSelection.school_id=school_id
+    db.session.add(studentSelection)
+    db.session.commit()
+    return
+
+
+#获取一个学校指定年的抽测男生女生数量
+def getTestingStudentNum(school_id,year):
+    res=getTestingStudentSums(year,school_id)
+    ret={}
+    ret['boy']=0
+    ret['girl']=0
+    for e in res:
+        ret['boy']=ret['boy']+e['boy_num']
+        ret['girl']=ret['girl']+e['girl_num']
+    return ret
 #查询指定年抽取人数情况
 #查询一个年级体测学生情况
 def getTestingStudentSumByGrade(grade,year,school_id):
@@ -265,15 +295,15 @@ def getStudentScore(tstudent_id):
 def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None):
     filter_list = []
     filter_list.append(TestingStudent.school_id == schoolid)
-    if name:
+    if name and name!='':
         filter_list.append(Student.name == name)
-    if number:
+    if number and number!='':
         filter_list.append(Student.student_number == number)
-    if college:
+    if college and college!='':
         filter_list.append(Student.college_name == college)
-    if grade:
+    if grade and grade!='':
         filter_list.append(Student.grade == grade)
-    if year:
+    if year and year!='':
         filter_list.append(TestingStudent.year == year)
     res=TestingStudent.query.join(Student).filter(*filter_list).all()
     ret=[]
@@ -306,3 +336,11 @@ def quickInsert(model,columns,data):
         [dict(zip(columns,d)) for d in data]
     )
     db.session.commit()
+
+##按照confirm和submit的和来算 0，0代表未提交或者审核不通过 1，0代表已提交未审核 1，1代表审核通过  没有记录代表未提交
+## 所以 返回0 1 2 -1 4种状况
+def getSubmitStatus(school_id,year):
+    studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==school_id).first()
+    if studentSelection:
+        return studentSelection.submit+studentSelection.confirm
+    else:return -1

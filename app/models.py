@@ -1,5 +1,8 @@
-from app import db
 import datetime
+
+from sqlalchemy import func
+
+from app import db
 #学校类
 from app.utils import objToDict
 
@@ -10,6 +13,12 @@ class School(db.Model):
     name=db.Column(db.String(30),nullable=False)
     code=db.Column(db.String(10),unique=True)       #学校代码
     type=db.Column(db.String(2))                    #学校类别，“本科”，“专科”
+
+    #让jsonify能正常执行，重写default方法，执行对象的serializable
+    def serializable(self):
+        #除了_开头的都返回回来
+        ret = objToDict(self)
+        return ret
 
 
 #学生类
@@ -41,6 +50,13 @@ class Account(db.Model):
 
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'))  #学校id外键
 
+    def serializable(self):
+        #密码不发回去
+        ret = objToDict(self)
+        ret['password']="****"
+        ret.pop("school_id")
+        return ret
+
 #体测项目
 class TestingProject(db.Model):
     __tablename__= 'testingproject'
@@ -48,10 +64,14 @@ class TestingProject(db.Model):
     name=db.Column(db.String(10),nullable=True)     #项目名称
     sex=db.Column(db.Integer,nullable=True)          #使用性别
     weight=db.Column(db.Float,nullable=True)        #项目权重
-    create_time=db.Column(db.DateTime,default = datetime.datetime)               #创建时间
-    comment=db.Column(db.String(50))#备注
+    create_time=db.Column(db.DateTime,default = datetime.datetime.now)               #创建时间
+    comment=db.Column(db.String(50),default="")#备注
 
     standards=db.relationship('TestingStandard',backref='project')  #该项目下的标准
+    def serializable(self):
+        #密码不发回去
+        ret = objToDict(self)
+        return ret
 
 #体测项目的标准
 class TestingStandard(db.Model):
@@ -62,17 +82,20 @@ class TestingStandard(db.Model):
     bottom=db.Column(db.Float,nullable=True)     #量化后的数据的下界
     top=db.Column(db.Float,nullable=True)     #量化后的数据的上界
     level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
-    comment=db.Column(db.String(50))#备注
+    comment=db.Column(db.String(50),default="")#备注
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #项目外键id
-
+    def serializable(self):
+        #密码不发回去
+        ret = objToDict(self)
+        return ret
 #体测成绩
 class TestingScore(db.Model):
     __tablename__= 'testingscore'
     id = db.Column(db.Integer, primary_key=True)
     score=db.Column(db.Float,nullable=True)         #成绩
     row_data=db.Column(db.String(10))                #原始数据
-    create_time=db.Column(db.DateTime,default = datetime.datetime)               #添加时间
+    create_time=db.Column(db.DateTime,default = datetime.datetime.now)               #添加时间
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #体测项目id
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'))  #为了减少查询，增加一点冗余
@@ -84,7 +107,7 @@ class TestingStudent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year=db.Column(db.Integer,nullable=False)       #抽测年份
     score=db.Column(db.Float)                       #总分成绩
-    comment=db.Column(db.String(255))               #备注
+    comment=db.Column(db.String(255),default="")               #备注
     level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
 
     student_id=db.Column(db.Integer,db.ForeignKey('student.id'),nullable=False) #学生id外键
@@ -134,10 +157,12 @@ class StudentSelection(db.Model):
     girl=db.Column(db.Integer,default=0)            #女生人数
     submit=db.Column(db.Integer,default=0)          #提交状态，0未提交，1已提交
     confirm=db.Column(db.Integer,default=0)         #审核状态,0审核不通过，1审核通过
-    submit_comment=db.Column(db.String(255))        #提交备注
-    confirm_comment=db.Column(db.String(255))       #审核备注
+    #0，0代表审核不通过 1，0代表已提交未审核 1，1代表审核通过 没有记录代表未提交
+    submit_comment=db.Column(db.String(255),default="")        #提交备注
+    confirm_comment=db.Column(db.String(255),default="")       #审核备注
 
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'),nullable=False)   #学校id外键
+    update_time = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())#修改时间，自动更新字段
 
 #菜单表
 class Systemmenu(db.Model):

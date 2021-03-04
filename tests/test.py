@@ -45,5 +45,5 @@ from app.service import *
 # a=db.session.execute("insert into school (name) values('1') ")
 # print(a)
 
-from werkzeug.security import generate_password_hash,check_password_hash
-print(generate_password_hash("admin"))
+res=getTestingStudent(1,2020)
+print(res)

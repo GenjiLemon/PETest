@@ -8,17 +8,16 @@
 						<div class="layui-row">
 							<div id="transfer_select_boy"></div> 
 						</div>
-						<div class="layui-row">
-							<button type="button" class="layui-btn" id="save_boy">保存</button>
-						</div>
 					</div>
 					<div  class="layui-col-md6">
 					   <div class="layui-row">
 					   	<div id="transfer_select_girl"></div> 
 					   </div>
-					   <div class="layui-row">
-					   	<button type="button" class="layui-btn" id="save_girl">保存</button>
-					   </div>
+					</div>
+				</div>
+				<div class="layui-row" style="">
+					<div class="layui-col-md2 layui-col-md-offset5">
+						<button type="button" class="layui-btn" id="save">保存</button>
 					</div>
 				</div>
 			</div>
@@ -52,6 +51,7 @@
 			      ,data:project_boy
 				  ,title:['男生项目列表','已选项目']
 			      ,id: 'transfer_boy' //定义索引
+			  	  ,value:[]
 			    }); 
 				
 			project_girl=[
@@ -62,35 +62,65 @@
 			transfer.render({
 			  elem: '#transfer_select_girl'  //绑定元素
 			  ,data: project_girl
+			  ,title:['女生项目列表','已选项目']
 			  ,id: 'transfer_girl' //定义索引
+			  ,value:[{"value": "4", "title": "贤心1", "disabled": "", "checked": ""}]
 			});
-				
-			$('#save_boy').click(function(){
+
+			//更新数据
+			var refresh2Transfer=function(){
+				//更新女生
+				$.get('/api/projectselection?sex=0',function(res){
+					if(res.code==0){
+						newdata=res.data;
+						//注意返回数据的格式
+						transfer.reload('transfer_girl',{data:newdata['data'],value:newdata['value']})
+					}
+				})
+				//更新男生
+				$.get('/api/projectselection?sex=1',function(res){
+					if(res.code==0){
+						newdata=res.data;
+						transfer.reload('transfer_boy',{data:newdata.data,value:newdata.value})
+					}
+				})
+			}
+			refresh2Transfer();
+
+
+			$('#save').click(function(){
 				var boy_data = transfer.getData('transfer_boy');
-				console.log(boy_data);
+				var girl_data = transfer.getData('transfer_girl');
+				//避免浅拷贝，多运行一次保险
+				ids=""
+				$.each(boy_data,function(key,value){
+					console.log(value);
+					ids+=value.value+",";
+				})
+				$.each(girl_data,function(key,value){
+					console.log(value);
+					ids+=value.value+",";
+				})
+				if(ids!=""){
+					ids=ids.substring(0,ids.length-1);
+				}
+				$.post('/api/selectProject',{ids:ids},function(res){
+					if(res.code==0){
+						layer.msg("保存成功！");
+					}
+					else{
+						layer.msg("保存失败！"+res.msg);
+					}
+				})
 			});	
 			
-			$('#save_girl').click(function(){
-				var boy_data = transfer.getData('transfer_girl');
-				console.log(boy_data);
-			});	
-		data=[
-			{
-				id:1,
-				year:2020,
-				boy:4,
-				girl:4
-			},
-			{
-				id:2,
-				year:2019,
-				boy:4,
-				girl:4
-			}
-		]
+
+
+
+
         table.render({
             elem: '#currentTableId',
-            data:data,
+            data:[],
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'year', title: '年'},
@@ -121,7 +151,12 @@
             }
         });
 		
-		
+		$.get('/api/historyProjectList',function(res){
+			if(res.code==0){
+				newdata=res.data?res.data:[];
+				table.reload('currentTableId',{data:newdata});
+			}
+		})
 		
 
     });

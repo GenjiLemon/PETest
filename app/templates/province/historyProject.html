@@ -11,10 +11,10 @@
 	     </tr> 
 	   </thead>
 	   <tbody>
-       {% for name,score in scores.items() %}
+       {% for e in projects %}
 	     <tr>
-	       <td>{{sex}}</td>
-	       <td>{{name}}</td>
+	       <td>{{e['sex']}}</td>
+	       <td>{{e['name']}}</td>
 	     </tr>
 	     {% endfor%}
 	   </tbody>

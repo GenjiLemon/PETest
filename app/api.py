@@ -2,12 +2,13 @@ import functools
 
 from flask import Blueprint, render_template, request, jsonify, session
 from werkzeug.exceptions import abort
-
-from app import db,models,service
+from werkzeug.security import generate_password_hash,check_password_hash
+from app import db, models, service, utils
 from sqlalchemy import and_,or_
 from .utils import *
 api = Blueprint('api',__name__)
 
+#检查userid
 def login_required(func):
     @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
     def inner(*args,**kwargs):
@@ -88,6 +89,10 @@ def school_testingStudent():
         data=service.getMultipleStudentScore(session.get('school_id'),data.get('grade'),data.get('college_name'),data.get('student_number'),data.get('year'),data.get('name'))
         return jsonRet(data=data)
     if request.method=="POST":
+        status=service.getSubmitStatus(session.get('school_id'),utils.getNowTestingYear())
+        if status==1 or status==2:
+            #检查今年名单是否添加
+            return jsonRet(-1,"您已提交审核，不能再添加学生。")
         idsstr=request.form.get('student_ids')
         if idsstr:
             ids=idsstr.split(",")
@@ -192,7 +197,6 @@ def __buildChild(pid,type):
             cm.child=__buildChild(cm.id,type)
         return childmenuns
     return
-
 @api.route("/uploadStudent", methods=["POST"])
 @login_required
 def school_uploadStudent():
@@ -211,10 +215,34 @@ def school_uploadStudent():
                 e[4]=0
         count= len(data)-1
         service.quickInsert(models.Student,header,data)
-        return jsonRet(msg="新增了{}个学生".format(count))
+        return jsonRet(msg="新增了{}个学生".format(count),code=0)
     return jsonRet(-1,msg="没有找到上传文件")
 
 
+@api.route('/submitStudent',methods=['POST'])
+@login_required
+def school_submitStudent():
+    year=getNowTestingYear()
+    schoolid=session['school_id']
+    comment=request.form.get('comment')
+    if comment == None:
+        comment = ""
+    #先查看是否有之前的提交记录
+    StudentSelection=models.StudentSelection
+    studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==schoolid).first()
+    if studentSelection:
+        studentSelection.submit_comment=comment
+        studentSelection.submit=1
+        studentSelection.confirm = 0
+        db.session.commit()
+        return jsonRet()
+    else:
+        #否则新建一个提交
+        service.createSubmitStudent(schoolid,year,comment)
+        return jsonRet()
+
+
+#************************分割线************************
 @api.route("/uploadSchool", methods=["POST"])
 @admin_required
 def province_uploadSchool():
@@ -229,3 +257,291 @@ def province_uploadSchool():
         return jsonRet(msg="新增了{}个学校".format(count))
     return jsonRet(-1,msg="没有找到上传文件")
 
+@api.route('/school',methods=['GET','POST','PUT','DELETE'])
+@admin_required
+def province_shcool():
+    #查询单个
+    if request.method=='GET':
+        id=request.args.get('id')
+        if id:
+            school=models.School.query.get(id)
+            return jsonRet(data=school)
+        else:return jsonRet(code=-1,msg="没有id值")
+    #添加一个
+    elif request.method=='POST':
+        name=request.form.get('name')
+        code=request.form.get('code')
+        type=request.form.get('type')
+        school=models.School()
+        if name and code and type:
+            school.name=name
+            school.code=code
+            school.type=type
+            db.session.add(school)
+            db.session.commit()
+            return jsonRet()
+        else: return jsonRet(-1,"参数不全")
+    #更新一个
+    elif request.method=='PUT':
+        #认为所有的都会发上来
+        name = request.form.get('name')
+        code = request.form.get('code')
+        type = request.form.get('type')
+        id = request.form.get('id')
+        if id and name and code and type:
+            school = models.School.query.get(id)
+            school.name = name
+            school.code = code
+            school.type = type
+            db.session.commit()
+            return jsonRet()
+        else:
+            return jsonRet(-1, "参数不全")
+    #删除一个
+    elif request.method=='DELETE':
+        id=request.args.get('id')
+        if id:
+            school=models.School.query.get(id)
+            db.session.delete(school)
+            db.session.commit()
+            return jsonRet()
+        else: return jsonRet(-1,"id值未得到")
+
+@api.route('/schoolList')
+def province_schoolList():
+    name=request.args.get('name')
+    code=request.args.get('code')
+    res=service.findSchool(name,code)
+    return jsonRet(data=res)
+
+@api.route('/account',methods=['GET','POST','DELETE','PUT'])
+def province_account():
+    if request.method=='GET':
+        # 获取账号列表
+        school_name=request.args.get('name')
+        if school_name:
+            school=models.School.query.filter(models.School.name==school_name).first()
+            if school:
+                accounts=models.Account.query.filter(models.Account.school_id==school.id,models.Account.type==1).all()
+                for e in accounts:
+                    #school_name也要拼上去
+                    e.name = school_name
+                return jsonRet(data=accounts)
+            else: return jsonRet(-1,"学校未找到")
+        else:
+            #不传学校就返回所有账户
+            accounts = models.Account.query.filter(models.Account.type==1).all()
+            for e in accounts:
+                school=models.School.query.get(e.school_id)
+                e.name=school.name
+            return jsonRet(data=accounts)
+    elif request.method=='POST':
+        school_name=request.form.get('school_name')
+        username=request.form.get('username')
+        password=request.form.get('password')
+        if school_name and username and password:
+            school=models.School.query.filter(models.School.name==school_name).first()
+            if school:
+                account=models.Account()
+                account.school_id=school.id
+                account.username=username
+                #密码hash处理
+                account.password=generate_password_hash(password)
+                #类型为学校账户
+                account.type=1
+                db.session.add(account)
+                db.session.commit()
+                return jsonRet()
+            else:
+                return jsonRet(-1, "学校未找到")
+        else:return jsonRet(-1,"参数缺失")
+    elif request.method=='PUT':
+        id=request.form.get('id')
+        password=request.form.get('password')
+        if id and password:
+            account=models.Account.query.get(id)
+            account.password=generate_password_hash(password)
+            db.session.commit()
+            return jsonRet()
+        else:return jsonRet(-1,"参数不全")
+    elif request.method=='DELETE':
+        id=request.args.get('id')
+        if id:
+            account=models.Account.query.get(id)
+            db.session.delete(account)
+            db.session.commit()
+            return jsonRet()
+        else:return jsonRet(-1,"id参数未找到")
+
+@api.route('/getCheckList',methods=['GET'])
+def province_getCheckList():
+    year = utils.getNowTestingYear()
+    res = models.StudentSelection.query.filter(models.StudentSelection.year == year,
+                                               models.StudentSelection.submit == 1,
+                                               models.StudentSelection.confirm != 1).all()
+    data = []
+    for e in res:
+        temp = {}
+        temp['id'] = e.id
+        temp['total_num'] = e.boy + e.girl
+        temp['update_time'] = e.update_time.strftime('%Y-%m-%d %H:%M:%S')
+        school = models.School.query.get(e.school_id)
+        temp['name'] = school.name
+        data.append(temp)
+    return jsonRet(data=data)
+
+@api.route('/getTestingStudent',methods=['GET'])
+def province_getTestingStudent():
+    id=request.args.get('id')
+    if id:
+        studentSelection=models.StudentSelection.query.get(id)
+        year=studentSelection.year
+        school_id=studentSelection.school_id
+        res=service.getTestingStudent(school_id,year)
+        return jsonRet(data=res)
+    else:return jsonRet(-1,"id未找到")
+
+@api.route('/checkTestingStudent',methods=['POST'])
+def province_checkTestingStudent():
+    id=request.form.get('id')
+    status=request.form.get('status')
+    if id and status!=None:
+        status=int(status)
+        studentSelection=models.StudentSelection.query.get(id)
+        if status==0:
+            studentSelection.submit=0
+            studentSelection.confirm=0
+            db.session.commit()
+        else:
+            studentSelection.submit = 1
+            studentSelection.confirm = 1
+            db.session.commit()
+        return jsonRet()
+    else:return jsonRet(-1,"参数不全")
+
+@api.route('/project',methods=['GET','POST'])
+def province_project():
+    if request.method=="GET":
+        data=models.TestingProject.query.all()
+        return jsonRet(data=data)
+    elif request.method=="POST":
+        form=request.form.to_dict()
+        project=models.TestingProject()
+        project.name=form.get('name')
+        project.sex=int(form.get('sex'))
+        project.weight=float(form.get('weight'))
+        if form.get('comment'):
+            project.comment=form.get('comment')
+        db.session.add(project)
+        db.session.commit()
+        return jsonRet()
+
+@api.route('/standard',methods=['GET','POST','PUT','DELETE'])
+def province_standard():
+    if request.method=="GET":
+        id = request.args.get('id')
+        level = request.args.get('level')
+        if id != None and level != None:
+            standards=models.TestingProject.query.get(id).standards
+            level=int(level)
+            ret=[]
+            for e in standards:
+                if e.level==level:
+                    ret.append(e)
+            return jsonRet(data=ret)
+        else: return jsonRet(-1,"参数确实")
+    elif request.method=='PUT':
+        data=request.form.to_dict()
+        id=data.get('id')
+        if id:
+            standard=models.TestingStandard.query.get(id)
+            standard.name=data.get('name')
+            standard.score=data.get('score')
+            standard.comment=data.get('comment',"")
+            standard.bottom=data.get('bottom')
+            standard.top=data.get('top')
+            db.session.commit()
+            return jsonRet()
+        else:return jsonRet(-1,"id缺失")
+    elif request.method=='POST':
+        data = request.form.to_dict()
+        standard = models.TestingStandard()
+        standard.name = data.get('name')
+        standard.score = data.get('score')
+        standard.comment = data.get('comment', "")
+        standard.bottom = data.get('bottom')
+        standard.top = data.get('top')
+        standard.level=data.get('level')
+        standard.project_id=data.get('project_id')
+        db.session.add(standard)
+        db.session.commit()
+        return jsonRet()
+
+    elif request.method=='DELETE':
+        id=request.args.get('id')
+        if id:
+            standard=models.TestingStandard.query.get(id)
+            db.session.delete(standard)
+            db.session.commit()
+            return jsonRet()
+        else:return jsonRet(-1,"id缺失")
+    else: return jsonRet(-1)
+
+@api.route('projectselection',methods=['GET','PUT'])
+def province_projectselection():
+    if request.method=='GET':
+        year=utils.getNowTestingYear()
+        sex=request.args.get('sex')
+        if sex:
+            sex=int(sex)
+            selected=service.getSelectProjects(year, sex)
+            all=models.TestingProject.query.filter(models.TestingProject.sex==sex).all()
+            #转换格式
+            ret={}
+            #data列表是左边，value是右边
+            ret['data']=[]
+            ret['value']=[]
+            for e in all:
+                temp = {}
+                temp['value'] = e.id
+                temp['title'] = e.name
+                ret['data'].append(temp)
+                for i in selected:
+                    if e.id==i.id:
+                        #说明这个选了
+                        ret['value'].append(e.id)
+                        break
+            return jsonRet(data=ret)
+        else:
+            return jsonRet(-1, "sex参数缺失")
+
+@api.route('/historyProjectList',methods=['GET'])
+def province_historyProject():
+    #先查出来都有哪些年
+    res=models.ProjectSelection.query.with_entities(models.ProjectSelection.year).distinct().order_by(models.ProjectSelection.year.desc()).all()
+    ret=[]
+    for e in res:
+        year=e[0]
+        temp={}
+        temp['boy']=len(service.getSelectProjects(year, 1))
+        temp['girl']=len(service.getSelectProjects(year, 0))
+        temp['year']=year
+        ret.append(temp)
+    #每列加个id
+    ret=utils.addIdColumn(ret)
+    return jsonRet(data=ret)
+
+#传入ids，逗号间隔的数组，男生女生加起来的今年的项目列表
+@api.route('/selectProject',methods=['POST'])
+def province_selectProject():
+    idsstr=request.form.get('ids')
+    #避免""的直接过不去
+    if idsstr!=None:
+        if idsstr=="":
+            ids=[]
+        else:
+            ids = idsstr.split(",")
+            map(int, ids)
+        service.selectProject(ids,getNowTestingYear())
+        return jsonRet()
+    else:return jsonRet(-1,'参数不存在')
