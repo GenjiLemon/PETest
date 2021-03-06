@@ -20,6 +20,13 @@
 		        <input type="text" name="weight" lay-verify="required" lay-reqtext="权重不能为空"  value="" class="layui-input">
 		    </div>
 		</div>
+        <div class="layui-form-item">
+            <label class="layui-form-label required">计分类别</label>
+            <div class="layui-input-block">
+				<input type="radio" name="scoreType" value="1" title="高优项目（指标越大分越高，如跳绳）" checked="checked">
+                <input type="radio" name="scoreType" value="-1" title="低优项目（指标越小分越高，如跑步）" >
+            </div>
+        </div>
 		<div class="layui-form-item">
 		    <label class="layui-form-label ">备注</label>
 		    <div class="layui-input-block">

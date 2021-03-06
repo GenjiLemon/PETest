@@ -1,6 +1,9 @@
 import functools
+from io import BytesIO
+from urllib.parse import quote
 
-from flask import Blueprint, render_template, request, jsonify, session
+import xlsxwriter
+from flask import Blueprint, render_template, request, jsonify, session, send_file
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db, models, service, utils
@@ -141,6 +144,43 @@ def changePassword():
     else:
         return jsonRet(msg=res)
 
+@api.route('/downloadScoreTemplate',methods=['GET'])
+@login_required
+def school_downloadScoreTemplate():
+    school_id=session.get('school_id')
+    school=models.School.query.get(school_id)
+    year=getNowTestingYear()
+    #获取excel要导入的所有数据
+    data=service.getTemplateData(school_id,year)
+    out = BytesIO()
+    workbook = xlsxwriter.Workbook(out)
+    table = workbook.add_worksheet()
+    headstyle = workbook.add_format({
+        "bold": 1,  # 字体加粗
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    datastyle = workbook.add_format({
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    #先加头部
+    table.write_row("A1",data[0],cell_format=headstyle)
+    #每行数据添加
+    for i in range(1,len(data)):
+        line=data[i]
+        table.write_row('A'+str(i+1), line,cell_format=datastyle)
+    workbook.close()
+    #调整偏移到第一个
+    out.seek(0)
+    #中文正常编码
+    filename = quote(school.name+".xlsx")
+    rv = send_file(out, as_attachment=True, attachment_filename=filename)
+    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+    return rv
+    #参考https://www.cnblogs.com/renguiyouzhi/p/11874479.html
+
+
 @api.route("/systemInit",methods=['GET'])
 @login_required
 def getSystemInit():
@@ -243,6 +283,7 @@ def school_submitStudent():
 
 
 #************************分割线************************
+
 @api.route("/uploadSchool", methods=["POST"])
 @admin_required
 def province_uploadSchool():
@@ -308,6 +349,7 @@ def province_shcool():
         else: return jsonRet(-1,"id值未得到")
 
 @api.route('/schoolList')
+@admin_required
 def province_schoolList():
     name=request.args.get('name')
     code=request.args.get('code')
@@ -315,6 +357,7 @@ def province_schoolList():
     return jsonRet(data=res)
 
 @api.route('/account',methods=['GET','POST','DELETE','PUT'])
+@admin_required
 def province_account():
     if request.method=='GET':
         # 获取账号列表
@@ -374,6 +417,7 @@ def province_account():
         else:return jsonRet(-1,"id参数未找到")
 
 @api.route('/getCheckList',methods=['GET'])
+@admin_required
 def province_getCheckList():
     year = utils.getNowTestingYear()
     res = models.StudentSelection.query.filter(models.StudentSelection.year == year,
@@ -391,6 +435,7 @@ def province_getCheckList():
     return jsonRet(data=data)
 
 @api.route('/getTestingStudent',methods=['GET'])
+@admin_required
 def province_getTestingStudent():
     id=request.args.get('id')
     if id:
@@ -402,6 +447,7 @@ def province_getTestingStudent():
     else:return jsonRet(-1,"id未找到")
 
 @api.route('/checkTestingStudent',methods=['POST'])
+@admin_required
 def province_checkTestingStudent():
     id=request.form.get('id')
     status=request.form.get('status')
@@ -420,6 +466,7 @@ def province_checkTestingStudent():
     else:return jsonRet(-1,"参数不全")
 
 @api.route('/project',methods=['GET','POST'])
+@admin_required
 def province_project():
     if request.method=="GET":
         data=models.TestingProject.query.all()
@@ -430,6 +477,7 @@ def province_project():
         project.name=form.get('name')
         project.sex=int(form.get('sex'))
         project.weight=float(form.get('weight'))
+        project.scoreType=int(form.get('scoreType'))
         if form.get('comment'):
             project.comment=form.get('comment')
         db.session.add(project)
@@ -437,6 +485,7 @@ def province_project():
         return jsonRet()
 
 @api.route('/standard',methods=['GET','POST','PUT','DELETE'])
+@admin_required
 def province_standard():
     if request.method=="GET":
         id = request.args.get('id')
@@ -488,6 +537,7 @@ def province_standard():
     else: return jsonRet(-1)
 
 @api.route('projectselection',methods=['GET','PUT'])
+@admin_required
 def province_projectselection():
     if request.method=='GET':
         year=utils.getNowTestingYear()
@@ -516,6 +566,7 @@ def province_projectselection():
             return jsonRet(-1, "sex参数缺失")
 
 @api.route('/historyProjectList',methods=['GET'])
+@admin_required
 def province_historyProject():
     #先查出来都有哪些年
     res=models.ProjectSelection.query.with_entities(models.ProjectSelection.year).distinct().order_by(models.ProjectSelection.year.desc()).all()
@@ -533,6 +584,7 @@ def province_historyProject():
 
 #传入ids，逗号间隔的数组，男生女生加起来的今年的项目列表
 @api.route('/selectProject',methods=['POST'])
+@admin_required
 def province_selectProject():
     idsstr=request.form.get('ids')
     #避免""的直接过不去
@@ -545,3 +597,21 @@ def province_selectProject():
         service.selectProject(ids,getNowTestingYear())
         return jsonRet()
     else:return jsonRet(-1,'参数不存在')
+
+@api.route('/uploadScore',methods=['POST'])
+@admin_required
+def province_uploadScore():
+    f = request.files.get('file', None)
+    if f:
+        #None表示没有列头，第一行就是数据，所以不会跳过第一行
+        WS = pd.read_excel(f,header=None)
+        data = np.array(WS).tolist()
+        count=len(data)-1
+        # 保留第一行，为了匹配到项目
+        school_id = service.checkScoreExcel(data)
+        if school_id==False:
+            return jsonRet(-1,"成绩模板数据有误")
+        year=getNowTestingYear()
+        service.importScores(data,school_id,year)
+        return jsonRet(msg="新增了{}个成绩".format(count), code=0)
+    return jsonRet(-1, msg="没有找到上传文件")

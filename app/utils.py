@@ -55,3 +55,11 @@ def getNowTestingYear():
     if today.month<9:
         year=year-1
     return year
+
+#传入 name(备注) 返回name
+def getProjectName(title):
+    end=title.find('(')
+    if end==-1:
+        return title
+    else:
+        return title[:end]

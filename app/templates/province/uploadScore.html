@@ -1,8 +1,16 @@
+<style>
+    .content-margin {font-size: 19px; margin: 10px;}
+</style>
+
 <link rel="stylesheet" href="/static/layuimini/lib/jq-module/zyupload/skins/zyupload-1.0.0.min.css" media="all">
 <div class="layuimini-container layuimini-page-anim">
     <div class="layuimini-main">
 		<div id="zyupload" class="zyupload"></div>
-	</div>	
+	</div>
+
+	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseAll">一键计算所有成绩</button></div>
+	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseStudent">点击计算学生成绩</button></div>
+	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseSchool">点击计算学校成绩</button></div>
 </div>
 
 
@@ -13,7 +21,7 @@
         // 初始化插件
         $("#zyupload").zyUpload({
             width: "650px",                 // 宽度
-            height: "400px",                 // 宽度
+            height: "250px",                 // 宽度
             itemWidth: "140px",                 // 文件项的宽度
             itemHeight: "115px",                 // 文件项的高度
             url: "/api/uploadScore",  // 上传文件的路径
@@ -24,16 +32,31 @@
             tailor: false,                    // 是否可以裁剪图片
             del: true,                    // 是否可以删除文件
             finishDel: true,  				  // 是否在上传文件完成后删除预览
-
+            /* 外部获得的回调接口 */
             onSuccess: function (file, response) {          // 文件上传成功的回调方法
                 res=$.parseJSON(response);
-                layer.alert("上传成功！"+res.msg,{icon:1})
+                if(res.code==0){
+                     layer.alert("导入成功！"+res.msg,{icon:1})
+                }
+                else {
+                    layer.alert("导入失败！"+res.msg,{icon:2})
+                }
             },
             onFailure: function (file, response) {          // 文件上传失败的回调方法
-                res=$.parseJSON(response);
-                layer.alert("上传失败！"+res.msg,{icon:1})
+                layer.alert("文件上传失败")
             }
         });
+
+		//计算所有
+		$('#analyseAll').bind('click',function(){
+			layer.alert("正在计算，请稍后");
+		});
+		$('#analyseStudent').bind('click',function(){
+			layer.alert("正在计算，请稍后");
+		});
+		$('#analyseSchool').bind('click',function(){
+			layer.alert("正在计算，请稍后");
+		});
 
     });
 </script>

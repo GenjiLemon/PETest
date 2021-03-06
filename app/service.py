@@ -86,7 +86,7 @@ def selectProject(projectids,year):
 
 #获取选择的项目
 def getSelectProjects(year,sex):
-    res = ProjectSelection.query.filter(ProjectSelection.year == year).all()
+    res = ProjectSelection.query.filter(ProjectSelection.year == year).order_by(ProjectSelection.project_id).all()
     ret=[]
     for e in res:
         project=TestingProject.query.get(e.project_id)
@@ -94,13 +94,64 @@ def getSelectProjects(year,sex):
             ret.append(project)
     return ret
 #删除选择的项目
-def delSelectProject(projectid,sex):
-    pass
+
+#检查文件是否符合要求，目前只检查头
+#正常返回school id 不对就返回False
+def checkScoreExcel(data):
+    template=getTemplateData(-1,utils.getNowTestingYear())
+    if data[0]==template[0]:
+        school_name=data[1][1]
+        school=School.query.filter(School.name==school_name).first()
+        if school:
+            return school.id
+    return False
 
 #成绩导入
-def importScore():
-    pass
-
+def importScores(excel_data,school_id,year):
+    excel_header=excel_data[0]
+    #先获取row_data对应的列、projectid
+    boyProjects=getSelectProjects(year,1)
+    #男生女生 对应的项目id 列序号 用于之后直接导入
+    boys=[]
+    girlProjects=getSelectProjects(year,0)
+    girls=[]
+    for i in range(5,len(excel_header)):
+        name=utils.getProjectName(excel_header[i])
+        for e in boyProjects:
+            if name==e.name:
+                boys.append({"id":e.id,"index":i})
+        for e in girlProjects:
+            if name==e.name:
+                girls.append({"id":e.id,"index":i})
+    data=excel_data[1:]
+    columns=['row_data','project_id','tstudent_id','school_id']
+    values=[]
+    for eachline in data:
+        student=Student.query.filter(Student.school_id==school_id,Student.student_number==eachline[4]).first()
+        tstudent=TestingStudent.query.filter(TestingStudent.student_id==student.id).first()
+        if student.sex==1:
+            #处理每个性别，把所有的id rowdata放进去
+            for e in boys:
+                #这里的e是每个项目，是个dict 拥有id(project_id)和index
+                temp=[]
+                #依次放入rowdata project_id tstudent_id school_id
+                temp.append(eachline[e['index']])
+                temp.append(e['id'])
+                temp.append(tstudent.id)
+                temp.append(school_id)
+                values.append(temp)
+        elif student.sex==0:
+            for e in girls:
+                #这里的e是每个项目，是个dict 拥有id(project_id)和index
+                temp=[]
+                #依次放入rowdata project_id student_id school_id
+                temp.append(eachline[e['index']])
+                temp.append(e['id'])
+                temp.append(tstudent.id)
+                temp.append(school_id)
+                values.append(temp)
+    quickInsert(TestingScore,columns,values)
+    return
 #**************省厅end**************
 
 
@@ -326,6 +377,43 @@ def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=No
 def getSchoolScore(schoolid,year):
     pass
 
+#获取学校成绩模板的数据，二维数组的形式，传给api直接生成数据
+#传schoolid为-1 说明只要头
+def getTemplateData(schoolid,year):
+    ret=[]
+    #行首
+    headers=['序号','学校名称','姓名','性别','学号']
+    #筛下除了性别其他都一样的项目字段
+    boy=getSelectProjects(year,1)
+    girl=getSelectProjects(year,0)
+    for e in boy:
+        for p in girl[:]:
+            if e.name==p.name and e.weight==p.weight and e.scoreType==p.scoreType:
+                #三者都相同认为是同一个项目只有性别不同
+                girl.remove(p)
+    #筛选后合并
+    projects=boy+girl
+    for p in projects:
+        name=p.name
+        if p.comment:
+            name+="("+p.comment+")"
+        headers.append(name)
+    ret.append(headers)
+    if schoolid==-1:
+        #只要头
+        return ret
+    school_name = School.query.get(schoolid).name
+    #定义序号
+    th=1
+    #查到学生并把基本信息填进去
+    for e in getTestingStudent(schoolid,year):
+        temp=[]
+        temp+=[th,school_name,e.name]
+        temp.append("男" if e.sex==1 else "女")
+        temp.append(e.student_number)
+        ret.append(temp)
+        th+=1
+    return ret
 #**************学校段end**************
 
 #**************公共方法**************

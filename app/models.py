@@ -65,6 +65,7 @@ class TestingProject(db.Model):
     sex=db.Column(db.Integer,nullable=True)          #使用性别
     weight=db.Column(db.Float,nullable=True)        #项目权重
     create_time=db.Column(db.DateTime,default = datetime.datetime.now)               #创建时间
+    scoreType=db.Column(db.Integer,default=1) #赋分是高优还是低优，1是高优，-1是低优
     comment=db.Column(db.String(50),default="")#备注
 
     standards=db.relationship('TestingStandard',backref='project')  #该项目下的标准
@@ -99,14 +100,14 @@ class TestingScore(db.Model):
 
     project_id=db.Column(db.Integer,db.ForeignKey('testingproject.id'),nullable=False)  #体测项目id
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'))  #为了减少查询，增加一点冗余
-    student_id=db.Column(db.Integer,db.ForeignKey('testingstudent.id'),nullable=False)  #体测学生id
+    tstudent_id=db.Column(db.Integer,db.ForeignKey('testingstudent.id'),nullable=False)  #体测学生id
 
 #体测学生
 class TestingStudent(db.Model):
     __tablename__= 'testingstudent'
     id = db.Column(db.Integer, primary_key=True)
     year=db.Column(db.Integer,nullable=False)       #抽测年份
-    score=db.Column(db.Float)                       #总分成绩
+    score=db.Column(db.Float,default=0)                       #总分成绩
     comment=db.Column(db.String(255),default="")               #备注
     level=db.Column(db.Integer,nullable=True)        #学生年级，123456代表大一到大五，及大六以上
 

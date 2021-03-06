@@ -1,20 +1,29 @@
+<style>
+    .content-margin {font-size: 19px; margin: 10px;}
+</style>
 <div class="layuimini-container layuimini-page-anim">
     <div class="layuimini-main">
 
 
         <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
-		<div style="font-size: 19px; margin: 10px;">提交状态：{{model['status_word']}}</div>
-		<div style="font-size: 19px; margin: 10px;">提交备注：{{model['submit_comment']|default("")}}</div>
-		<div style="font-size: 19px; margin: 10px;">审核备注：{{model['confirm_comment']|default("")}}</div>
+		<div class="content-margin">提交状态：{{model['status_word']}}</div>
+		<div class="content-margin">提交备注：{{model['submit_comment']|default("")}}</div>
+		<div class="content-margin">审核备注：{{model['confirm_comment']|default("")}}</div>
+<!--        提交按钮不同情况-->
         {% if model['status']==1 or model['status']==2 %}
-            <div ><button class="layui-btn layui-btn-disabled" >已提交</button></div>
+            <div class="content-margin"><button class="layui-btn layui-btn-disabled" >已提交</button></div>
         {% elif model['status']==0 %}
-            <div ><button class="layui-btn layui-btn-lg" id="submit">重新提交</button></div>
+            <div class="content-margin"><button class="layui-btn layui-btn-lg" id="submit">重新提交</button></div>
         {% elif model['status']==-1 %}
-            <div ><button class="layui-btn layui-btn-lg" id="submit">提交</button></div>
+            <div class="content-margin">
+                <button class="layui-btn layui-btn-lg" id="submit">提交</button>
+            </div>
         {% endif %}
 
-
+<!--        模板下载-->
+        {% if model['status']==2 %}
+            <div class="content-margin"><button class="layui-btn layui-btn-lg" id="download">下载成绩模板</button></div>
+        {% endif %}
     </div>
 </div>
 <script>
@@ -62,6 +71,10 @@
 			  })
 
 			});
+		});
+
+		$('#download').bind('click',function(){
+			window.location.href='/api/downloadScoreTemplate';
 		});
 
 
