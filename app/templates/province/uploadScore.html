@@ -49,13 +49,40 @@
 
 		//计算所有
 		$('#analyseAll').bind('click',function(){
-			layer.alert("正在计算，请稍后");
+			var index = layer.load(0, {shade:0.5}); //目前没有最长时间，直接运行到结束
+			$.post('/api/calculateAll',function(res){
+				layer.close(index);
+				if(res.code==0){
+					layer.msg("计算完成！");
+				}
+				else{
+					layer.alert("计算出错！"+res.msg);
+				}
+			})
 		});
 		$('#analyseStudent').bind('click',function(){
-			layer.alert("正在计算，请稍后");
+			var index = layer.load(0, {shade:0.5}); //目前没有最长时间，直接运行到结束
+			$.post('/api/calculateStudent',function(res){
+				layer.close(index);
+				if(res.code==0){
+					layer.msg("计算完成！");
+				}
+				else{
+					layer.alert("计算出错！"+res.msg);
+				}
+			})
 		});
 		$('#analyseSchool').bind('click',function(){
-			layer.alert("正在计算，请稍后");
+			var index = layer.load(0, {shade:0.5}); //目前没有最长时间，直接运行到结束
+			$.post('/api/calculateSchool',function(res){
+				layer.close(index);
+				if(res.code==0){
+					layer.msg("计算完成！");
+				}
+				else{
+					layer.alert("计算出错！"+res.msg);
+				}
+			})
 		});
 
     });

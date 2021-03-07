@@ -9,7 +9,7 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">年份</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="year" autocomplete="off" class="layui-input">
+                                <input type="text" name="year" autocomplete="off" class="layui-input" lay-verify="required">
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -25,10 +25,21 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">查看项目</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="project" autocomplete="off" class="layui-input">
+                                <input type="text" name="project" autocomplete="off" class="layui-input" lay-verify="required">
                             </div>
 						</div>
-						
+                        <div class="layui-inline">
+                            <label class="layui-form-label">性别</label>
+                            <div class="layui-input-inline">
+								<select name="sex"  lay-verify="required">
+									<option value=""></option>
+									<option value="1">男</option>
+									<option value="0">女</option>
+									<option value="all">全部</option>
+								</select>
+                            </div>
+						</div>
+
                         <div class="layui-inline">
                             <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
                         </div>
@@ -62,7 +73,7 @@
 				'good_rate':'60%',
 				'good_rank':2,
 				'excellent_rate':"60%",
-				'excelletn_rank':3
+				'excellent_rank':3
 			}
 	
 		]
@@ -74,17 +85,18 @@
                 layEvent: 'LAYTABLE_TIPS',
                 icon: 'layui-icon-tips'
             }],
+            toolbar:true,
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'school_name', title: '学校名称'},
-                {field: 'score', title: '总得分'},
-				{field: 'score_rank', title: '总分排名'},
+                {field: 'score', title: '平均分数'},
+				{field: 'score_rank', title: '分数排名'},
 				{field: 'pass_rate', title: '及格率'},
 				{field: 'pass_rank', title: '及格率排名'},
 				{field: 'good_rate', title: '良好率'},
 				{field: 'good_rank', title: '良好率排名'},
-				{field: 'excellent_rate', title: '合格率'},
-				{field: 'excelletn_rank', title: '合格率排名'}
+				{field: 'excellent_rate', title: '优秀率'},
+				{field: 'excellent_rank', title: '优秀率排名'}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 15,
@@ -94,13 +106,19 @@
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            $.get('/',data=data.field,function(res){
+            //默认性别全部
+            if(data.field.school_type==""){
+                layer.msg("请选择院校类别");
+                return false;
+            }
+            $.get('/api/projectRank',data.field,function(res){
 				if(res.code==0){
+				    console.log(res.data);
 					var newdata=res.data;
 					table.reload("currentTableId",{data:newdata});
 				}
-				
 			})
+			return false;
         });
 
        

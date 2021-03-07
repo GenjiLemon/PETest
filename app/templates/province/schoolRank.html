@@ -23,16 +23,15 @@
                             </div>
 						</div>
                         <div class="layui-inline">
-                            <label class="layui-form-label">查看项目</label>
+                            <label class="layui-form-label">查看类别</label>
                             <div class="layui-input-inline">
-                               <select name="project"  lay-verify="required">
+                               <select name="type"  lay-verify="required">
 									<option value=""></option>
-									<option value="pass">总合格率排名</option>
-									<option value="good">总优良率排名</option>
-									<option value="4">大四总数据</option>
-									<option value="3">大三总数据</option>
-									<option value="2">大二总数居</option>
-									<option value="1">大一总数居</option>
+									<option value="score">总分情况排名</option>
+									<option value="1">大一学生详细分数</option>
+									<option value="2">大二学生详细分数</option>
+									<option value="3">大三学生详细分数</option>
+									<option value="4">大四学生详细分数</option>
                                </select>
                             </div>
 						</div>
@@ -70,7 +69,7 @@
 				'good_rate':'60%',
 				'good_rank':2,
 				'excellent_rate':"60%",
-				'excelletn_rank':3
+				'excellent_rank':3
 			}
 	
 		]
@@ -82,6 +81,7 @@
                 layEvent: 'LAYTABLE_TIPS',
                 icon: 'layui-icon-tips'
             }],
+            toolbar:true,
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'school_name', title: '学校名称'},
@@ -91,8 +91,8 @@
 				{field: 'pass_rank', title: '及格率排名'},
 				{field: 'good_rate', title: '良好率'},
 				{field: 'good_rank', title: '良好率排名'},
-				{field: 'excellent_rate', title: '合格率'},
-				{field: 'excelletn_rank', title: '合格率排名'}
+				{field: 'excellent_rate', title: '优秀率'},
+				{field: 'excellent_rank', title: '优秀率排名'}
             ]],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 15,
@@ -109,6 +109,7 @@
 				}
 				
 			})
+			return false;
         });
 
        

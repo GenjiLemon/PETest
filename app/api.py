@@ -615,3 +615,79 @@ def province_uploadScore():
         service.importScores(data,school_id,year)
         return jsonRet(msg="新增了{}个成绩".format(count), code=0)
     return jsonRet(-1, msg="没有找到上传文件")
+
+@api.route('/calculateSchool',methods=['POST'])
+@admin_required
+def province_calculateSchool():
+    year=getNowTestingYear()
+    try:
+        service.calculateSchoolScore(year)
+        return jsonRet()
+    except:
+        return jsonRet(-1,"系统错误")
+
+
+@api.route('/calculateStudent',methods=['POST'])
+@admin_required
+def province_calculateStudent():
+    year = getNowTestingYear()
+    try:
+        service.calculateStudentScore(year)
+        return jsonRet()
+    except:
+        return jsonRet(-1, "系统错误")
+
+@api.route('/calculateAll',methods=['POST'])
+@admin_required
+def province_calculateAll():
+    year = getNowTestingYear()
+    try:
+        service.calculateStudentScore(year)
+        service.calculateSchoolScore(year)
+        return jsonRet()
+    except:
+        return jsonRet(-1, "系统错误")
+
+
+@api.route('/projectRank',methods=['GET'])
+def province_projectRank():
+    data=request.args.to_dict()
+    year=data.get('year')
+    school_type=data.get('school_type')
+    project=data.get('project')
+    sex=data.get('sex')
+    if year and school_type and project and sex:
+        #默认按照分数排名
+        #如果sex为all说明为全都要
+        res=service.getProjectRank(project,year,school_type,sex)
+        if res==False:
+            return jsonRet(-1,"参数有误")
+        else:
+            #把id修正一遍
+            res=utils.addIdColumn(res,obj=True)
+            return jsonRet(data=res)
+    else:
+        return jsonRet(-1,"参数缺失")
+
+@api.route('/schoolRank',methods=['GET'])
+def province_schoolRank():
+    data=request.args.to_dict()
+    year=data.get('year')
+    school_type=data.get('school_type')
+    type=data.get('type')
+    if year and school_type and type:
+        if type == "score":
+            res=service.getTotalScoreRank(year,school_type)
+            if res==False:
+                #说明没找到
+                return jsonRet(-1,"参数有误")
+            res=utils.addIdColumn(res,obj=True)
+            return jsonRet(data=res)
+        else:
+            #剩下情况为查看大type的各项指标
+            level=int(type)
+            res=service.getDetailScoreRank(year,school_type,level)
+            #此时已经加过id和排序了
+            return jsonRet(data=res)
+    else:
+        return jsonRet(-1,"参数缺失")

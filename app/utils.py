@@ -2,6 +2,8 @@
 
 import numpy as np
 import pandas as pd
+
+from collections import Counter,OrderedDict
 from flask import jsonify
 import datetime
 
@@ -32,10 +34,14 @@ def excelToMatrix(filePath,header=None):
         with open(filePath, 'r', errors='ignore') as fileHandle:
             return np.loadtxt(fileHandle,delimiter=",")
     return
-def addIdColumn(data):
+#obj为True表示是对象，否则是dict
+def addIdColumn(data,obj=False):
     th=1
     for e in data:
-        e['id']=th
+        if obj:
+            e.id=th
+        else:
+            e['id']=th
         th=th+1
     return data
 #用来转化学生类中的str grade
@@ -63,3 +69,23 @@ def getProjectName(title):
         return title
     else:
         return title[:end]
+
+
+#传入scorelist 传回平均值 优秀率 良好率 及格率
+def calculateScorelist(scorelist):
+    #平均值保留两位，其他保留四位
+    narray=np.array(scorelist)
+    average=round(float(narray.mean()),2)
+    excellent_rate=round(np.count_nonzero(narray >= 90)/len(scorelist),4)
+    good_rate=round(np.count_nonzero(narray >= 80)/len(scorelist),4)
+    pass_rate=round(np.count_nonzero(narray >= 60)/len(scorelist),4)
+    return average,excellent_rate,good_rate,pass_rate
+
+#获取list的每个元素的排序list
+def getOrderList(datalist):
+    cplist = datalist[:]
+    cplist.sort()
+    ret=[]
+    for e in datalist:
+        ret.append(cplist.index(e) + 1)
+    return ret

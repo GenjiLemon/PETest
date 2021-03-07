@@ -121,13 +121,28 @@ class SchoolScore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year=db.Column(db.Integer,nullable=False)       #年份
     testing_number=db.Column(db.Integer)            #测试人数
+    boy_number=db.Column(db.Integer)                #男生人数
+    girl_number=db.Column(db.Integer)               #女生人数
     score=db.Column(db.Float)                       #抽测学生平均总分成绩
     excellent_rate=db.Column(db.Float)              #优秀率
+    excellent_number=db.Column(db.Integer)          #优秀人数
+    excellent_boy_number=db.Column(db.Integer)      #优秀男生人数
+    excellent_girl_number=db.Column(db.Integer)     #优秀女生人数
     good_rate=db.Column(db.Float)                   #良好率
-    pass_rate=db.Column(db.Float)                   #通过率
-
+    good_number=db.Column(db.Integer)               #良好人数
+    good_boy_number=db.Column(db.Integer)           #良好男生人数
+    good_girl_number=db.Column(db.Integer)          #良好女生人数
+    pass_rate=db.Column(db.Float)                   #及格率
+    pass_number=db.Column(db.Integer)               #及格人数
+    pass_boy_number=db.Column(db.Integer)           #及格男生人数
+    pass_girl_number=db.Column(db.Integer)          #及格女生人数
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'),nullable=False)   #学校id外键
-    
+
+    def serializable(self):
+        #密码不发回去
+        ret = objToDict(self)
+        return ret
+
 #学校详细成绩
 class SchoolScoreDetail(db.Model):
     __tablename__= 'schoolscoredetail'
@@ -140,6 +155,11 @@ class SchoolScoreDetail(db.Model):
 
     school_id=db.Column(db.Integer,db.ForeignKey('school.id'),nullable=False)   #学校id外键
     project_id = db.Column(db.Integer, db.ForeignKey('testingproject.id'), nullable=False)  # 体测项目id
+
+    def serializable(self):
+        #密码不发回去
+        ret = objToDict(self)
+        return ret
 
 #每年选体测项目
 class ProjectSelection(db.Model):

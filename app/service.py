@@ -1,5 +1,6 @@
 #此文件为中间服务类
 from flask import session
+from sqlalchemy import desc
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db,app
 from app.models import *
@@ -152,6 +153,158 @@ def importScores(excel_data,school_id,year):
                 values.append(temp)
     quickInsert(TestingScore,columns,values)
     return
+
+def getProjectRank(project_name,year,school_type,sex):
+    #数据查出来，插入排名字段，再返回
+    #按照成绩排名降序
+    #找到参加体测的所有学校
+    schoolids=getTestingSchoolids(year,school_type)
+    if schoolids==[]:
+        return False
+    if sex=="all":
+        #处理性别全部的情况
+        # 先找这个项目是否存在，拿到id
+        boy = TestingProject.query.filter(TestingProject.name == project_name, TestingProject.sex == 1).first()
+        girl=TestingProject.query.filter(TestingProject.name == project_name, TestingProject.sex == 0).first()
+        if boy!=None and girl !=None:
+            # 先找到boy，然后每个对应的girl找到，加到girl上，最后再返回
+            boyScoreDetails = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                  SchoolScoreDetail.project_id == boy.id,
+                                                  SchoolScoreDetail.school_id.in_(schoolids)).all()
+            for e in boyScoreDetails:
+                school=School.query.get(e.school_id)
+                schoolScore=SchoolScore.query.filter(SchoolScore.school_id==e.school_id).first()
+                boy_num=schoolScore.boy_number
+                girl_num=schoolScore.girl_number
+                total_num=boy_num+girl_num
+                girlScoreDetail=SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                  SchoolScoreDetail.project_id == girl.id,
+                                                  SchoolScoreDetail.school_id==e.school_id).first()
+                e.score=round((e.score*boy_num+girlScoreDetail.score*girl_num)/total_num,2)
+                e.excellent_rate=round((e.excellent_rate*boy_num+girlScoreDetail.excellent_rate*girl_num)/total_num,4)
+                e.good_rate=round((e.good_rate*boy_num+girlScoreDetail.good_rate*girl_num)/total_num,4)
+                e.pass_rate=round((e.pass_rate*boy_num+girlScoreDetail.pass_rate*girl_num)/total_num,4)
+            #都加到boy上，boy就是女生加男生共同的ScoreDetails
+            #但是要重新排序一下score
+            boyScoreDetails.sort(key=lambda x: x.score, reverse=True)
+            ret = __addRankandName(boyScoreDetails)
+            return ret
+        else:
+            return getProjectRank(project_name,year,school_type,1 if boy else 0)
+    else:
+        #先找这个项目是否存在，拿到id
+        project=TestingProject.query.filter(TestingProject.name==project_name,TestingProject.sex==sex).first()
+        if project:
+            #找到这个项目指定年下的所有学校的成绩，进行排序
+            data = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                  SchoolScoreDetail.project_id == project.id,
+                                                  SchoolScoreDetail.school_id.in_(schoolids)).order_by(
+                desc(SchoolScoreDetail.score)).all()
+            ret=__addRankandName(data)
+            return ret
+    return False
+
+#传入schoolscore或者schoolscoredetail的list
+#添加score_rank excellent_rank good_rank pass_rank后返回
+def __addRankandName(schoolScoreDetails):
+    if not schoolScoreDetails:
+        #判断空和None
+        return []
+    #先把各种list填充
+    score_list=[]
+    excellent_rate_list=[]
+    good_rank_list=[]
+    pass_rank_list=[]
+    for e in schoolScoreDetails:
+        score_list.append(e.score)
+        excellent_rate_list.append(e.excellent_rate)
+        good_rank_list.append(e.good_rate)
+        pass_rank_list.append(e.pass_rate)
+    #计算各个list的orderlist
+    scoreOrder=utils.getOrderList(score_list)
+    excellentOrder=utils.getOrderList(excellent_rate_list)
+    goodOrder=utils.getOrderList(good_rank_list)
+    passOrder=utils.getOrderList(pass_rank_list)
+    #循环 把每个order填进去
+    #再把school_name放进去
+    for i in range(0,len(schoolScoreDetails)):
+        e=schoolScoreDetails[i]
+        e.school_name=School.query.get(e.school_id).name
+        e.score_rank=scoreOrder[i]
+        e.excellent_rank=excellentOrder[i]
+        e.good_rank=goodOrder[i]
+        e.pass_rank=passOrder[i]
+    return schoolScoreDetails
+
+#获取今年参与体测的学校ids，根据上传的名单来判断
+#分为本科和专科
+def getTestingSchoolids(year,school_type:str):
+    if school_type not in ['本科','专科']:
+        #不时这两类直接返回
+        return []
+    res=StudentSelection.query.filter(StudentSelection.year==year).all()
+    ret=[]
+    for e in res:
+        school=School.query.get(e.school_id)
+        if school.type==school_type:
+            ret.append(school.id)
+    return ret
+
+#获取学校总分的排名，各项率和排名
+def getTotalScoreRank(year,school_type):
+    # 找到参加体测的所有学校ids
+    schoolids = getTestingSchoolids(year, school_type)
+    schoolScores=SchoolScore.query.filter(SchoolScore.school_id.in_(schoolids)).order_by(desc(SchoolScore.score)).all()
+    if schoolScores:
+        ret=__addRankandName(schoolScores)
+        return ret
+    return False
+
+def getDetailScoreRank(year,school_type,level):
+    #先查到所有学校
+    schoolids=getTestingSchoolids(year,school_type)
+    ret=[]
+    for school_id in schoolids:
+        ret.append(getSchoolLevelScore(year,school_id,level))
+    #排序，加id
+    ret.sort(key=lambda x:x['excellent_rate'],reverse=True)
+    ret=utils.addIdColumn(ret)
+    return ret
+def getSchoolLevelScore(year,school_id,level):
+    pass
+
+#极少情况
+#根据项目名，获取这个学校今年的这个项目平均分
+def getSchoolProjectScoreByName(school_id,project_name,year):
+    #先查一下这个projectname有几个project
+    projects=TestingProject.query.filter(TestingProject.name==project_name).all()
+    if not projects:
+        return False
+    if len(projects)==1:
+        res=SchoolScoreDetail.query.filter(SchoolScoreDetail.year==year,SchoolScoreDetail.project_id==projects[0].id,SchoolScoreDetail.school_id==school_id).first().score
+        return res if res else False
+    elif len(projects)==2:
+        scoreScore = SchoolScore.query.filter(SchoolScore.school_id == school_id, SchoolScore.year == year).first()
+        boy_num = scoreScore.boy_number
+        girl_num = scoreScore.girl_number
+        total_number=boy_num+girl_num
+        if projects[0].sex==1:
+            boy = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                 SchoolScoreDetail.project_id == projects[0].id,
+                                                 SchoolScoreDetail.school_id == school_id).first()
+            girl = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                  SchoolScoreDetail.project_id == projects[1].id,
+                                                  SchoolScoreDetail.school_id == school_id).first()
+        else:
+            boy = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                 SchoolScoreDetail.project_id == projects[1].id,
+                                                 SchoolScoreDetail.school_id == school_id).first()
+            girl = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                  SchoolScoreDetail.project_id == projects[0].id,
+                                                  SchoolScoreDetail.school_id == school_id).first()
+        return round((boy_num*boy.score+girl_num*girl.score)/total_number,2)
+    else:return False
+
 #**************省厅end**************
 
 
@@ -416,6 +569,197 @@ def getTemplateData(schoolid,year):
     return ret
 #**************学校段end**************
 
+#**************系统级begin**************
+def getProjectWeight(year):
+    #计算男生和女生的项目的真实权值，返回[{id:weight}]
+    boys=getSelectProjects(year,1)
+    boyweights={}
+    sum=0
+    for e in boys:
+        #先计算权重和
+        sum+=e.weight
+    for e in boys:
+        #权重矫正后放入
+        boyweights[e.id]=e.weight/sum
+    girls=getSelectProjects(year,0)
+    gilrweights = {}
+    sum = 0
+    for e in girls:
+        sum += e.weight
+    for e in girls:
+        gilrweights[e.id] = e.weight / sum
+    #男女一起
+    boyweights.update(gilrweights)
+    return boyweights
+
+def calculateStudentScore(year):
+    #先计算出各个项目对应的真实权值
+    weights=getProjectWeight(year)
+    #先处理原始成绩
+    try:
+        tstudents=TestingStudent.query.filter(TestingStudent.year==year).all()
+        for t in tstudents:
+            #找到所有成绩
+            scores=TestingScore.query.filter(TestingScore.tstudent_id==t.id).all()
+            totalScore=0
+            for s in scores:
+                #每个成绩进行原始成绩转化为得分
+                if s.score==None:
+                    #score 没有默认值0，所以NOne是没计算过
+                    s.score=__getScore(s.row_data,s.project_id)
+                    #即使更新过了，这边也要拿到成绩，用于放到tstudent里
+                totalScore+=s.score*weights[s.project_id]
+            t.score=totalScore
+        db.session.commit()
+    except Exception as e:
+        #先回退再报错
+        db.session.rollback()
+        raise e
+
+#给原始成绩和项目查找实际成绩，如果找不到返回0
+def __getScore(row_data,project_id):
+    #rowdata是字符串
+    row_data=float(row_data)
+    project = TestingProject.query.get(project_id)
+    if project.scoreType==1:
+        #高优计算是 =< <
+        for standard in project.standards:
+            if row_data>=standard.bottom and row_data<standard.top:
+                return standard.score
+    elif project.scoreType==-1:
+        #低优计算是 < <=
+        for standard in project.standards:
+            if row_data>standard.bottom and row_data<=standard.top:
+                return standard.score
+    #找不到返回0
+    return 0
+
+def calculateSchoolScore(year):
+    #先找出所有的学校
+    #testingstudent表里计算总分平均值  优秀率等 天道schoolscore
+    school_ids=TestingStudent.query.with_entities(TestingStudent.school_id).distinct().all()
+    #这里查出来要转化一下
+    try:
+        for school_id in school_ids:
+            school_id=school_id[0]
+            tstudents=TestingStudent.query.filter(TestingStudent.year==year,TestingStudent.school_id==school_id).all()
+            scorelist=[]
+            for t in tstudents:
+                scorelist.append(t.score)
+            average,excellent_rate,good_rate,pass_rate=utils.calculateScorelist(scorelist)
+            #如果之前有，说明这次只是更新就好了
+            schoolScore=SchoolScore.query.filter(SchoolScore.year==year,SchoolScore.school_id==school_id).first()
+            if schoolScore==None:
+                schoolScore=SchoolScore()
+            schoolScore.year=year
+            schoolScore.testing_number=len(scorelist)
+            schoolScore.school_id=school_id
+            schoolScore.score=average
+            schoolScore.excellent_rate=excellent_rate
+            schoolScore.good_rate=good_rate
+            schoolScore.pass_rate=pass_rate
+            if schoolScore.id==None:
+                #处理新增
+                db.session.add(schoolScore)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+    #填充学校成绩其他字段 （人数、优秀、及格人数等）
+    calculateSchoolScoreNumber(year)
+    #score表里计算学校-项目的平均值 优秀率等 填到schoolscoredetail
+    boy=getSelectProjects(year,1)
+    girl=getSelectProjects(year,0)
+    try:
+        for school_id in school_ids:
+            school_id = school_id[0]
+            for project in boy+girl:
+                scores=TestingScore.query.filter(TestingScore.school_id==school_id,TestingScore.project_id==project.id).all()
+                scorelist = []
+                for score in scores:
+                    scorelist.append(score.score)
+                average, excellent_rate, good_rate, pass_rate = utils.calculateScorelist(scorelist)
+                #如果之前有数据只需要更新
+                schoolScoreDetail = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
+                                                                   SchoolScoreDetail.school_id == school_id,
+                                                                   SchoolScoreDetail.project_id == project.id).first()
+                if schoolScoreDetail==None:
+                    schoolScoreDetail=SchoolScoreDetail()
+                schoolScoreDetail.project_id=project.id
+                schoolScoreDetail.school_id=school_id
+                schoolScoreDetail.year=year
+                schoolScoreDetail.score=average
+                schoolScoreDetail.excellent_rate=excellent_rate
+                schoolScoreDetail.good_rate=good_rate
+                schoolScoreDetail.pass_rate=pass_rate
+                if schoolScoreDetail.id==None:
+                    #如果id不在说明事新增模式
+                    db.session.add(schoolScoreDetail)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
+def calculateSchoolScoreNumber(year):
+    res=SchoolScore.query.filter(SchoolScore.year==year).all()
+    try:
+        for schoolScore in res:
+            tstudents = TestingStudent.query.filter(TestingStudent.year == year,
+                                                    TestingStudent.school_id == schoolScore.school_id).all()
+            manyNumbers=__getScoreLeverNumber(tstudents)
+            schoolScore.testing_number=manyNumbers[0]
+            schoolScore.boy_number=manyNumbers[1]
+            schoolScore.girl_number=manyNumbers[2]
+            schoolScore.excellent_number=manyNumbers[3]
+            schoolScore.excellent_boy_number=manyNumbers[4]
+            schoolScore.excellent_girl_number=manyNumbers[5]
+            schoolScore.good_number=manyNumbers[6]
+            schoolScore.good_boy_number=manyNumbers[7]
+            schoolScore.good_girl_number=manyNumbers[8]
+            schoolScore.pass_number=manyNumbers[9]
+            schoolScore.pass_boy_number=manyNumbers[10]
+            schoolScore.pass_girl_number=manyNumbers[11]
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+def __getScoreLeverNumber(tstudents):
+    number=len(tstudents)
+    boy_number=0
+    excellent_number=0
+    excellent_boy_number=0
+    good_number=0
+    good_boy_number=0
+    pass_number=0
+    pass_boy_number=0
+    #开始循环
+    for e in tstudents:
+        sex=e.student.sex
+        if sex==1:
+            boy_number+=1
+        if e.score>=90:
+            excellent_number+=1
+            if sex==1:
+                excellent_boy_number+=1
+        if e.score>=80:
+            good_number+=1
+            if sex==1:
+                good_boy_number+=1
+        if e.score>=60:
+            pass_number+=1
+            if sex==1:
+                pass_boy_number+=1
+    #结束循环
+    #处理女生
+    girl_number=number-boy_number
+    excellent_girl_number = excellent_number-excellent_boy_number
+    good_girl_number = good_number-good_boy_number
+    pass_girl_number = pass_number-pass_boy_number
+    return number, boy_number, girl_number, excellent_number, excellent_boy_number, excellent_girl_number, \
+           good_number, good_boy_number, good_girl_number, pass_number, pass_boy_number, pass_girl_number
+
+#**************系统级end****************
+
 #**************公共方法**************
 #传入类，列名和数据，快速插入到数据库
 def quickInsert(model,columns,data):
@@ -432,3 +776,18 @@ def getSubmitStatus(school_id,year):
     if studentSelection:
         return studentSelection.submit+studentSelection.confirm
     else:return -1
+
+def getProjectNames(year):
+    boy = getSelectProjects(year, 1)
+    girl = getSelectProjects(year, 0)
+    for e in boy:
+        for p in girl[:]:
+            if e.name == p.name and e.weight == p.weight and e.scoreType == p.scoreType:
+                # 三者都相同认为是同一个项目只有性别不同
+                girl.remove(p)
+    # 筛选后合并
+    projects = boy + girl
+    ret=[]
+    for e in projects:
+        ret.append(e.name)
+    return ret
