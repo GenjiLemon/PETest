@@ -72,14 +72,17 @@ def getProjectName(title):
 
 
 #传入scorelist 传回平均值 优秀率 良好率 及格率
-def calculateScorelist(scorelist):
+def calculateScorelist(scorelist,averageOnly=False):
     #平均值保留两位，其他保留四位
     narray=np.array(scorelist)
     average=round(float(narray.mean()),2)
+    if averageOnly:
+        return average
     excellent_rate=round(np.count_nonzero(narray >= 90)/len(scorelist),4)
     good_rate=round(np.count_nonzero(narray >= 80)/len(scorelist),4)
     pass_rate=round(np.count_nonzero(narray >= 60)/len(scorelist),4)
     return average,excellent_rate,good_rate,pass_rate
+
 
 #获取list的每个元素的排序list
 def getOrderList(datalist):
@@ -89,3 +92,10 @@ def getOrderList(datalist):
     for e in datalist:
         ret.append(cplist.index(e) + 1)
     return ret
+
+#把dict中所有key的int转成str类型
+def strDictKey(dictdata:dict):
+    for k in list(dictdata.keys()):
+        if isinstance(k,int):
+            dictdata[str(k)]=dictdata.pop(k)
+    return dictdata

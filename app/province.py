@@ -96,7 +96,9 @@ def home():
 @province.route('/projectRank')
 @admin_required
 def projectRank():
-    return render_template('province/projectRank.html')
+    model = {}
+    model['year'] = utils.getNowTestingYear()
+    return render_template('province/projectRank.html',model=model)
 
 @province.route('/school')
 @admin_required
@@ -111,7 +113,9 @@ def schoolAccount():
 @province.route('/schoolRank')
 @admin_required
 def schoolRank():
-    return render_template('province/schoolRank.html')
+    model={}
+    model['year']=utils.getNowTestingYear()
+    return render_template('province/schoolRank.html',model=model)
 
 @province.route('/selectProject')
 @admin_required

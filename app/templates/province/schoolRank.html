@@ -9,7 +9,7 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">年份</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="year" autocomplete="off" class="layui-input">
+                                <input type="text" name="year" autocomplete="off" class="layui-input" value={{model.year}}>
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -58,42 +58,17 @@
             table = layui.table,
             miniPage = layui.miniPage;
 		form.render();
-		var data=[
-			{
-				'id':1,
-				'school_name':"zju",
-				'score':70.2,
-				'score_rank':1,
-				'pass_rate':"100%",
-				'pass_rank':1,
-				'good_rate':'60%',
-				'good_rank':2,
-				'excellent_rate':"60%",
-				'excellent_rank':3
-			}
-	
-		]
-        table.render({
-            elem: '#currentTableId',
-            data:data,
-            defaultToolbar: ['filter', 'exports', 'print', {
-                title: '提示',
-                layEvent: 'LAYTABLE_TIPS',
-                icon: 'layui-icon-tips'
-            }],
-            toolbar:true,
-            cols: [[
+        baseTitle=[
                 {field: 'id', title: '序号'},
 				{field: 'school_name', title: '学校名称'},
-                {field: 'score', title: '总得分'},
-				{field: 'score_rank', title: '总分排名'},
-				{field: 'pass_rate', title: '及格率'},
-				{field: 'pass_rank', title: '及格率排名'},
-				{field: 'good_rate', title: '良好率'},
-				{field: 'good_rank', title: '良好率排名'},
-				{field: 'excellent_rate', title: '优秀率'},
-				{field: 'excellent_rank', title: '优秀率排名'}
-            ]],
+                {field: 'score', title: '总得分', sort: true}
+            ]
+        table.render({
+            elem: '#currentTableId',
+            data:[],
+            defaultToolbar: ['filter', 'exports', 'print'],
+            toolbar:true,
+            cols: [baseTitle],
             limits: [10, 15, 20, 25, 50, 100],
             limit: 15,
             page: true,
@@ -102,10 +77,11 @@
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            $.get('/',data=data.field,function(res){
+            $.get('/api/schoolRank',data=data.field,function(res){
 				if(res.code==0){
-					var newdata=res.data;
-					table.reload("currentTableId",{data:newdata});
+					var newdata=res.data['data'];
+					var newtitle=baseTitle.concat(res.data['title']);
+					table.reload("currentTableId",{data:newdata,cols:[newtitle]});
 				}
 				
 			})

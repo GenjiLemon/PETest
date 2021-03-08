@@ -180,6 +180,28 @@ def school_downloadScoreTemplate():
     return rv
     #参考https://www.cnblogs.com/renguiyouzhi/p/11874479.html
 
+@api.route('/downloadStudentTemplate',methods=['GET'])
+@login_required
+def school_downloadStudentTemplate():
+    out = BytesIO()
+    workbook = xlsxwriter.Workbook(out)
+    table = workbook.add_worksheet()
+    headstyle = workbook.add_format({
+        "bold": 1,  # 字体加粗
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    headers=['学院(系)名称','年级','专业班级','姓名','性别','学号']
+    table.write_row("A1",headers,cell_format=headstyle)
+    workbook.close()
+    #调整偏移到第一个
+    out.seek(0)
+    #中文正常编码
+    filename = quote("学生信息导入模板.xlsx")
+    rv = send_file(out, as_attachment=True, attachment_filename=filename)
+    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+    return rv
+
 
 @api.route("/systemInit",methods=['GET'])
 @login_required
@@ -281,8 +303,75 @@ def school_submitStudent():
         service.createSubmitStudent(schoolid,year,comment)
         return jsonRet()
 
+@api.route('/schoolTotalScore',methods=['GET'])
+def school_schoolTotalScore():
+    year=request.args.get('year')
+    school_id=session['school_id']
+    if year:
+        type=models.School.query.get(school_id).type
+        alldata=service.getTotalScoreRank(year,type)
+        for e in alldata:
+            if e.school_id==school_id:
+                return jsonRet(data=[e])
+        return jsonRet(-1,"未找到该校数据")
+    else:
+        return jsonRet(-1,"参数不全")
 
+@api.route('/schoolDetailScore',methods=['GET'])
+def school_schoolDetailScore():
+    year=request.args.get('year')
+    school_id=session['school_id']
+    if year:
+        type = models.School.query.get(school_id).type
+        ret=[]
+        #男生项目女生项目分开处理
+        boy_projects=service.getSelectProjects(year,1)
+        for e in boy_projects:
+            #拿到基于schoolscoredetail的obj
+            alldata=service.getProjectRank(e.name,year,type,1)
+            for each in alldata:
+                if each.school_id==school_id:
+                    each.project_name=e.name+"(男)"
+                    ret.append(each)
+                    break
+
+        girl_projects=service.getSelectProjects(year,0)
+        for e in girl_projects:
+            #拿到基于schoolscoredetail的obj
+            alldata=service.getProjectRank(e.name,year,type,0)
+            if alldata:
+                for each in alldata:
+                    if each.school_id==school_id:
+                        each.project_name=e.name+ "(女)"
+                        ret.append(each)
+                        break
+        ret=utils.addIdColumn(ret,obj=True)
+        return jsonRet(data=ret)
+    else:
+        return jsonRet(-1,"参数不全")
 #************************分割线************************
+
+@api.route('/downloadSchoolTemplate',methods=['GET'])
+@admin_required
+def school_downloadSchoolTemplate():
+    out = BytesIO()
+    workbook = xlsxwriter.Workbook(out)
+    table = workbook.add_worksheet()
+    headstyle = workbook.add_format({
+        "bold": 1,  # 字体加粗
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    headers=['学校姓名','学校代码','学校类比']
+    table.write_row("A1",headers,cell_format=headstyle)
+    workbook.close()
+    #调整偏移到第一个
+    out.seek(0)
+    #中文正常编码
+    filename = quote("学校信息导入模板.xlsx")
+    rv = send_file(out, as_attachment=True, attachment_filename=filename)
+    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+    return rv
 
 @api.route("/uploadSchool", methods=["POST"])
 @admin_required
@@ -677,17 +766,34 @@ def province_schoolRank():
     type=data.get('type')
     if year and school_type and type:
         if type == "score":
+            title=[
+                {"field": 'excellent_rate', "title": '优秀率', "sort": "true"},
+                {"field": 'excellent_rank', "title": '优秀率排名'},
+				{"field": 'good_rate', "title": '优良率', "sort": "true"},
+				{"field": 'good_rank', "title": '优良率排名'},
+				{"field": 'pass_rate', "title": '及格率', "sort": "true"},
+				{"field": 'pass_rank', "title": '及格率排名'},
+                ]
             res=service.getTotalScoreRank(year,school_type)
             if res==False:
                 #说明没找到
                 return jsonRet(-1,"参数有误")
             res=utils.addIdColumn(res,obj=True)
-            return jsonRet(data=res)
+            return jsonRet(data={"title":title,"data":res})
         else:
             #剩下情况为查看大type的各项指标
             level=int(type)
-            res=service.getDetailScoreRank(year,school_type,level)
-            #此时已经加过id和排序了
-            return jsonRet(data=res)
+            title = [
+                {"field": 'pass_rate', "title": '及格率', "sort": "true"},
+                {"field": 'good_rate', "title": '优良率', "sort": "true"},
+                {"field": 'excellent_rate', "title": '优秀率', "sort": "true"},
+            ]
+            data,projects=service.getDetailScoreRank(year,school_type,level)
+            if data:
+                #此时已经加过id和排序了
+                for e in projects:
+                    title.append({"field":e.id,"title":e.name, "sort": "true"})
+                return jsonRet(data={"data":data,"title":title})
+            else:return jsonRet(-1,"参数有误")
     else:
         return jsonRet(-1,"参数缺失")

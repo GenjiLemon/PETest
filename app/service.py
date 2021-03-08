@@ -264,15 +264,65 @@ def getDetailScoreRank(year,school_type,level):
     #先查到所有学校
     schoolids=getTestingSchoolids(year,school_type)
     ret=[]
+    projects=getYearAllProject(year)
+    #给出projectid和返回的id的对应关系projectsMap 单性别一样，双性别的女生也指向男生这里
+    projectsMap={}
+    for e in projects:
+        projectsMap[e.id]=e.id
+        id=getSisterProjectId(e,year)
+        #如果发现同名女项目，把id也指过来
+        if id:
+            projectsMap[id]=e.id
+    #学校遍历
     for school_id in schoolids:
-        ret.append(getSchoolLevelScore(year,school_id,level))
+        res=getSchoolLevelScore(year,school_id,level,projectsMap)
+        if res:
+            # 这里需要把dict里的key都换成str
+            #school_name扔进去
+            res['school_name']=School.query.get(school_id).name
+            ret.append(utils.strDictKey(res))
     #排序，加id
     ret.sort(key=lambda x:x['excellent_rate'],reverse=True)
     ret=utils.addIdColumn(ret)
-    return ret
-def getSchoolLevelScore(year,school_id,level):
-    pass
+    return ret,projects
 
+def getSisterProjectId(boyProject,year):
+    girls = getSelectProjects(year, 0)
+    for p in girls:
+        if boyProject.name == p.name and boyProject.weight == p.weight and boyProject.scoreType == p.scoreType:
+            # 三者都相同认为是同一个项目只有性别不同
+            return p.id
+    return None
+
+def getSchoolLevelScore(year,school_id,level,projectsMap):
+    #返回dict:pass_rate,good..,exc...,score,2,4,5,4...(项目id，默认男）
+    #开始时对应的项目id放的是list，后来放平均值
+    ret={}
+    for i in set(projectsMap.keys()):
+        ret[i]=[]
+    #根据学校id找出所有今年体测的level的学生tstudents，
+    tstudents=TestingStudent.query.filter(TestingStudent.school_id==school_id,TestingStudent.level==level,TestingStudent.year==year).all()
+    #遍历tstudents得到score，各种rate
+    scorelist=[]
+    tstudentsids=[]
+    for e in tstudents:
+        scorelist.append(e.score)
+        tstudentsids.append(e.id)
+    #计算各种率
+    ret['score'],ret['excellent_rate'],ret['good_rate'],ret['pass_rate']=utils.calculateScorelist(scorelist)
+    #根据学校id和tstudentsid找出所有testingsscores
+    testScorelist=TestingScore.query.filter(TestingScore.school_id==school_id,TestingScore.tstudent_id.in_(tstudentsids)).all()
+    #遍历testingscores 得到projectid和score的对应
+    for testingscore in testScorelist:
+        # 把每个projectid映射为最终返回的projectid，成绩填数组里，
+        ret[projectsMap[testingscore.project_id]].append(testingscore.score)
+    #把数组都求平均值
+    for i in set(projectsMap.keys()):
+        if len(ret[i])==0:
+            ret[i]=0
+        else:
+            ret[i]=utils.calculateScorelist(ret[i],averageOnly=True)
+    return ret
 #极少情况
 #根据项目名，获取这个学校今年的这个项目平均分
 def getSchoolProjectScoreByName(school_id,project_name,year):
@@ -537,15 +587,7 @@ def getTemplateData(schoolid,year):
     #行首
     headers=['序号','学校名称','姓名','性别','学号']
     #筛下除了性别其他都一样的项目字段
-    boy=getSelectProjects(year,1)
-    girl=getSelectProjects(year,0)
-    for e in boy:
-        for p in girl[:]:
-            if e.name==p.name and e.weight==p.weight and e.scoreType==p.scoreType:
-                #三者都相同认为是同一个项目只有性别不同
-                girl.remove(p)
-    #筛选后合并
-    projects=boy+girl
+    projects=getYearAllProject(year)
     for p in projects:
         name=p.name
         if p.comment:
@@ -778,16 +820,20 @@ def getSubmitStatus(school_id,year):
     else:return -1
 
 def getProjectNames(year):
-    boy = getSelectProjects(year, 1)
-    girl = getSelectProjects(year, 0)
-    for e in boy:
-        for p in girl[:]:
-            if e.name == p.name and e.weight == p.weight and e.scoreType == p.scoreType:
-                # 三者都相同认为是同一个项目只有性别不同
-                girl.remove(p)
-    # 筛选后合并
-    projects = boy + girl
+    projects=getYearAllProject(year)
     ret=[]
     for e in projects:
         ret.append(e.name)
     return ret
+
+def getYearAllProject(year):
+    boy=getSelectProjects(year,1)
+    girl=getSelectProjects(year,0)
+    for e in boy:
+        for p in girl[:]:
+            if e.name==p.name and e.weight==p.weight and e.scoreType==p.scoreType:
+                #三者都相同认为是同一个项目只有性别不同
+                girl.remove(p)
+    #筛选后合并
+    projects=boy+girl
+    return projects

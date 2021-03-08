@@ -7,14 +7,9 @@
                 <form class="layui-form layui-form-pane" action="">
                     <div class="layui-form-item">
                         <div class="layui-inline">
-                            <label class="layui-form-label">年级</label>
+                            <label class="layui-form-label">年份</label>
                             <div class="layui-input-inline">
-<!--                                <select class="layui-inline" name="grade" lay-verify="" lay-search>-->
-<!--                                	<option value="2020">2020</option>-->
-<!--                                	<option value="2019">2019</option>-->
-<!--                                	<option value="2018">2018</option>-->
-<!--                                </select>   -->
-                                 <input type="text" name="grade" autocomplete="off" class="layui-input">
+                                 <input type="text" name="year" autocomplete="off" class="layui-input" value={{model.year}}>
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -41,45 +36,24 @@
             table = layui.table,
             miniPage = layui.miniPage;
 			
-		var data1=[
-				{
-					"year":"2020",
-					"total_num":100,
-					"boy_num":30,
-					"gilr_num":70,
-					"score":86.01,
-					"score_rank":"1/60",
-					"pass_rate":"94.22%",
-					"pass_rank":"1/60",
-					"good_rate":"80.33%",
-					"good_rank":"1/60",
-					"excellent_rate":"30.22%",
-					"excellent_rank":"1/60",
-					id:1,
-					project_name:"1000米（男）"
-				}
-			];
+
         table.render({
             elem: '#generalScoreId',
-		    data:data1,
+		    data:[],
             toolbar: 'true',
-            defaultToolbar: ['filter', 'exports', 'print', {
-                title: '提示',
-                layEvent: 'LAYTABLE_TIPS',
-                icon: 'layui-icon-tips'
-            }],
+            defaultToolbar: ['filter', 'exports', 'print'],
             cols: [[
                 {field: 'year', title: '年份'},
-                {field: 'total_num', title: '体测总人数'},
-                {field: 'boy_num', title: '男生人数'},
-                {field: 'girl_num', title: '女生人数'},
-                {field: 'score',  title: '总分'},
+                {field: 'testing_number', title: '体测总人数'},
+                {field: 'boy_number', title: '男生人数'},
+                {field: 'girl_number', title: '女生人数'},
+                {field: 'score',  title: '总分', sort: true},
                 {field: 'score_rank',  title: '总分排名'},
-				{field: 'pass_rate',  title: '及格率'},
+				{field: 'pass_rate',  title: '及格率', sort: true},
 				{field: 'pass_rank',  title: '及格率排名'},
-				{field: 'good_rate',  title: '良好率'},
+				{field: 'good_rate',  title: '良好率', sort: true},
 				{field: 'good_rank',  title: '良好率排名'},
-				{field: 'excellent_rate',  title: '优秀率'},
+				{field: 'excellent_rate',  title: '优秀率', sort: true},
 				{field: 'excellent_rank',  title: '优秀率排名'}
             ]],
             skin: 'line'
@@ -87,23 +61,19 @@
 		
 		table.render({
 		    elem: '#detailScoreId',
-		    data:data1,
+		    data:[],
 		    toolbar: 'true',
-		    defaultToolbar: ['filter', 'exports', 'print', {
-		        title: '提示',
-		        layEvent: 'LAYTABLE_TIPS',
-		        icon: 'layui-icon-tips'
-		    }],
+		    defaultToolbar: ['filter', 'exports', 'print'],
 		    cols: [[
 		        {field: 'id', title: '序号'},
 		        {field: 'project_name', title: '项目名', minWidth: 150},
-		        {field: 'score', title: '平均分'},
+		        {field: 'score', title: '平均分', sort: true},
 		        {field: 'score_rank', title: '排名'},
-		        {field: 'pass_rate', title: '及格率'},
+		        {field: 'pass_rate', title: '及格率', sort: true},
 		        {field: 'pass_rank',  title: '及格率排名'},
-		        {field: 'good_rate',  title: '良好率'},
+		        {field: 'good_rate',  title: '良好率', sort: true},
 		        {field: 'good_rank',  title: '良好率排名'},
-		        {field: 'excellent_rate',  title: '优秀率'},
+		        {field: 'excellent_rate',  title: '优秀率', sort: true},
 		        {field: 'excellent_rank',  title: '优秀率排名'}
 		    ]],
 		    skin: 'line'
@@ -111,20 +81,20 @@
 		
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
-            var result = JSON.stringify(data.field);
-            layer.alert(result, {
-                title: '最终的搜索信息'
-            });
+            $.get('/api/schoolTotalScore',data.field,function(res){
+                if(res.code==0){
+                    newdata=res.data?res.data:[]
+                    console.log(res.data)
+                    table.reload('generalScoreId', {data:newdata})
+                }
+            })
+            $.get('/api/schoolDetailScore',data.field,function(res){
+                if(res.code==0){
+                    newdata=res.data?res.data:[]
+                    table.reload('detailScoreId', {data:newdata})
+                }
+            })
 
-            //执行搜索重载
-            table.reload('currentTableId', {
-                page: {
-                    curr: 1
-                }
-                , where: {
-                    searchParams: result
-                }
-            }, 'data');
 
             return false;
         });

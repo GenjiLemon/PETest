@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="/static/layuimini/lib/jq-module/zyupload/skins/zyupload-1.0.0.min.css" media="all">
 <div class="layuimini-container layuimini-page-anim">
     <div class="layuimini-main">
+        <div class="content-margin"><button class="layui-btn layui-btn-lg" id="download">下载学校信息导入模板</button></div>
 		<div id="zyupload" class="zyupload"></div>
     </div>
 </div>
@@ -49,6 +50,8 @@ $(function () {
                 layer.alert("文件上传失败")
             }
         });
-
+         $('#download').bind('click',function(){
+			window.location.href='/api/downloadSchoolTemplate';
+		});
     });
 </script>

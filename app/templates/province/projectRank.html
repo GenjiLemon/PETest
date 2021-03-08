@@ -9,7 +9,7 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">年份</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="year" autocomplete="off" class="layui-input" lay-verify="required">
+                                <input type="text" name="year" autocomplete="off" class="layui-input" lay-verify="required" value={{model.year}}>
                             </div>
                         </div>
                         <div class="layui-inline">
@@ -79,23 +79,19 @@
 		]
         table.render({
             elem: '#currentTableId',
-            data:data,
-            defaultToolbar: ['filter', 'exports', 'print', {
-                title: '提示',
-                layEvent: 'LAYTABLE_TIPS',
-                icon: 'layui-icon-tips'
-            }],
+            data:[],
+            defaultToolbar: ['filter', 'exports', 'print'],
             toolbar:true,
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'school_name', title: '学校名称'},
-                {field: 'score', title: '平均分数'},
+                {field: 'score', title: '平均分数', sort: true},
 				{field: 'score_rank', title: '分数排名'},
-				{field: 'pass_rate', title: '及格率'},
+				{field: 'pass_rate', title: '及格率', sort: true},
 				{field: 'pass_rank', title: '及格率排名'},
-				{field: 'good_rate', title: '良好率'},
+				{field: 'good_rate', title: '良好率', sort: true},
 				{field: 'good_rank', title: '良好率排名'},
-				{field: 'excellent_rate', title: '优秀率'},
+				{field: 'excellent_rate', title: '优秀率', sort: true},
 				{field: 'excellent_rank', title: '优秀率排名'}
             ]],
             limits: [10, 15, 20, 25, 50, 100],

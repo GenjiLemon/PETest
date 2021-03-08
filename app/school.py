@@ -56,7 +56,9 @@ def editStudent():
 @school.route('/schoolScore',methods=['GET'])
 @login_required
 def schoolScore():
-    return render_template('school/schoolScore.html')
+    model={}
+    model['year']=utils.getNowTestingYear()
+    return render_template('school/schoolScore.html',model=model)
 
 @school.route('/selectStudent',methods=['GET'])
 @login_required
