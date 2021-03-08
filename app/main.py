@@ -6,11 +6,7 @@ from werkzeug.security import generate_password_hash,check_password_hash
 
 from .utils import jsonRet
 
-@app.before_request
-def debug_login(*args, **kwargs):
-    return
-    session['school_id'] = 1
-    session['user_id'] = 1
+
 
 def login_required(func):
     @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性

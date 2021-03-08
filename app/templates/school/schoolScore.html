@@ -36,7 +36,15 @@
             table = layui.table,
             miniPage = layui.miniPage;
 			
-
+        var excTrans=function(d){
+            return (d.excellent_rate*100)+"%"
+        }
+        var goodTrans=function(d){
+            return (d.good_rate*100)+"%"
+        }
+        var passTrans=function(d){
+            return (d.pass_rate*100)+"%"
+        }
         table.render({
             elem: '#generalScoreId',
 		    data:[],
@@ -49,11 +57,11 @@
                 {field: 'girl_number', title: '女生人数'},
                 {field: 'score',  title: '总分', sort: true},
                 {field: 'score_rank',  title: '总分排名'},
-				{field: 'pass_rate',  title: '及格率', sort: true},
+				{field: 'pass_rate',  title: '及格率', sort: true,templet:passTrans},
 				{field: 'pass_rank',  title: '及格率排名'},
-				{field: 'good_rate',  title: '良好率', sort: true},
+				{field: 'good_rate',  title: '良好率', sort: true,templet:goodTrans},
 				{field: 'good_rank',  title: '良好率排名'},
-				{field: 'excellent_rate',  title: '优秀率', sort: true},
+				{field: 'excellent_rate',  title: '优秀率', sort: true,templet:excTrans},
 				{field: 'excellent_rank',  title: '优秀率排名'}
             ]],
             skin: 'line'
@@ -69,11 +77,11 @@
 		        {field: 'project_name', title: '项目名', minWidth: 150},
 		        {field: 'score', title: '平均分', sort: true},
 		        {field: 'score_rank', title: '排名'},
-		        {field: 'pass_rate', title: '及格率', sort: true},
+		        {field: 'pass_rate', title: '及格率', sort: true,templet:passTrans},
 		        {field: 'pass_rank',  title: '及格率排名'},
-		        {field: 'good_rate',  title: '良好率', sort: true},
+		        {field: 'good_rate',  title: '良好率', sort: true,templet:goodTrans},
 		        {field: 'good_rank',  title: '良好率排名'},
-		        {field: 'excellent_rate',  title: '优秀率', sort: true},
+		        {field: 'excellent_rate',  title: '优秀率', sort: true,templet:excTrans},
 		        {field: 'excellent_rank',  title: '优秀率排名'}
 		    ]],
 		    skin: 'line'
@@ -84,7 +92,6 @@
             $.get('/api/schoolTotalScore',data.field,function(res){
                 if(res.code==0){
                     newdata=res.data?res.data:[]
-                    console.log(res.data)
                     table.reload('generalScoreId', {data:newdata})
                 }
             })

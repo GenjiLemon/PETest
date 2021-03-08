@@ -214,7 +214,7 @@ def getSystemInit():
         }
         logoInfo={
             "title":"院校端",
-            "image":"/static/layuimini/images/logo.png",
+            "image":"/static/images/logo.png",
             "href":""
         }
         menuInfo=__getMenuList(type)
@@ -231,7 +231,7 @@ def getSystemInit():
         }
         logoInfo = {
             "title": "院校端",
-            "image": "/static/layuimini/images/logo.png",
+            "image": "/static/images/logo.png",
             "href": ""
         }
         menuInfo = __getMenuList(type)
@@ -767,11 +767,8 @@ def province_schoolRank():
     if year and school_type and type:
         if type == "score":
             title=[
-                {"field": 'excellent_rate', "title": '优秀率', "sort": "true"},
                 {"field": 'excellent_rank', "title": '优秀率排名'},
-				{"field": 'good_rate', "title": '优良率', "sort": "true"},
 				{"field": 'good_rank', "title": '优良率排名'},
-				{"field": 'pass_rate', "title": '及格率', "sort": "true"},
 				{"field": 'pass_rank', "title": '及格率排名'},
                 ]
             res=service.getTotalScoreRank(year,school_type)
@@ -783,11 +780,7 @@ def province_schoolRank():
         else:
             #剩下情况为查看大type的各项指标
             level=int(type)
-            title = [
-                {"field": 'pass_rate', "title": '及格率', "sort": "true"},
-                {"field": 'good_rate', "title": '优良率', "sort": "true"},
-                {"field": 'excellent_rate', "title": '优秀率', "sort": "true"},
-            ]
+            title = []
             data,projects=service.getDetailScoreRank(year,school_type,level)
             if data:
                 #此时已经加过id和排序了

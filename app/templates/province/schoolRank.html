@@ -58,10 +58,24 @@
             table = layui.table,
             miniPage = layui.miniPage;
 		form.render();
+
+		var excTrans=function(d){
+            return (d.excellent_rate*100)+"%"
+        }
+        var goodTrans=function(d){
+            return (d.good_rate*100)+"%"
+        }
+        var passTrans=function(d){
+            return (d.pass_rate*100)+"%"
+        }
+
         baseTitle=[
                 {field: 'id', title: '序号'},
 				{field: 'school_name', title: '学校名称'},
-                {field: 'score', title: '总得分', sort: true}
+                {field: 'score', title: '总得分', sort: true},
+                {field: 'pass_rate', title: '及格率', sort: "true",templet:passTrans},
+                {field: 'good_rate', title: '优良率', sort: "true",templet:goodTrans},
+                {field: 'excellent_rate', title: '优秀率', sort: "true",templet:excTrans}
             ]
         table.render({
             elem: '#currentTableId',
