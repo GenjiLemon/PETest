@@ -11,7 +11,10 @@
 		<div class="content-margin">审核备注：{{model['confirm_comment']|default("")}}</div>
 <!--        提交按钮不同情况-->
         {% if model['status']==1 or model['status']==2 %}
-            <div class="content-margin"><button class="layui-btn layui-btn-disabled" >已提交</button></div>
+            <div class="content-margin">
+                <button class="layui-btn layui-btn-disabled" >已提交</button>
+                <button class="layui-btn layui-btn-g" >申请重新提交 <button>
+            </div>
         {% elif model['status']==0 %}
             <div class="content-margin"><button class="layui-btn layui-btn-lg" id="submit">重新提交</button></div>
         {% elif model['status']==-1 %}

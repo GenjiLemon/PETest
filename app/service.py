@@ -537,7 +537,7 @@ def getTestingStudentSums(year:int,school_id):
 def getStudentScore(tstudent_id):
     #注意是从testingstudent里查
     res=db.session.execute(
-        "SELECT tp.name ,ts.score FROM  testingscore ts JOIN Testingproject tp ON ts.project_id=tp.id WHERE ts.student_id={}".format(tstudent_id)
+        "SELECT tp.name ,ts.score FROM  testingscore ts JOIN testingproject tp ON ts.project_id=tp.id WHERE ts.tstudent_id={}".format(tstudent_id)
     )
     ret={}
     for e in res:

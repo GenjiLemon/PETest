@@ -230,7 +230,7 @@ def getSystemInit():
             "href": "/province/home"
         }
         logoInfo = {
-            "title": "院校端",
+            "title": "厅端",
             "image": "/static/images/logo.png",
             "href": ""
         }
@@ -302,6 +302,25 @@ def school_submitStudent():
         #否则新建一个提交
         service.createSubmitStudent(schoolid,year,comment)
         return jsonRet()
+
+@api.route('/applyResubmit',methods=['POST'])
+@login_required
+def school_submitStudent():
+    #apply submit to 2 comment to empty
+    #if confirm submit to 0 confirm to 0
+    #else submit to 1,same to before
+    year=getNowTestingYear()
+    schoolid=session['school_id']
+    #find selection before
+    StudentSelection=models.StudentSelection
+    studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==schoolid).first()
+    if studentSelection:
+        studentSelection.submit_comment=""
+        studentSelection.submit=2
+        db.session.commit()
+        return jsonRet()
+    else:
+        return jsonRet(-1,"到记录")
 
 @api.route('/schoolTotalScore',methods=['GET'])
 def school_schoolTotalScore():
@@ -510,7 +529,7 @@ def province_account():
 def province_getCheckList():
     year = utils.getNowTestingYear()
     res = models.StudentSelection.query.filter(models.StudentSelection.year == year,
-                                               models.StudentSelection.submit == 1,
+                                               models.StudentSelection.submit != 0,
                                                models.StudentSelection.confirm != 1).all()
     data = []
     for e in res:
@@ -520,6 +539,10 @@ def province_getCheckList():
         temp['update_time'] = e.update_time.strftime('%Y-%m-%d %H:%M:%S')
         school = models.School.query.get(e.school_id)
         temp['name'] = school.name
+        if e.submit==1:
+            temp['type']="重选申请"
+        elif e.submit==2:
+            temp['type']="正常申请"
         data.append(temp)
     return jsonRet(data=data)
 
@@ -538,19 +561,31 @@ def province_getTestingStudent():
 @api.route('/checkTestingStudent',methods=['POST'])
 @admin_required
 def province_checkTestingStudent():
+    def edit(studentSelection,num):
+        studentSelection.submit = num
+        studentSelection.confirm = num
+        db.session.commit()
     id=request.form.get('id')
     status=request.form.get('status')
+    comment=request.form.get('comment')
     if id and status!=None:
         status=int(status)
         studentSelection=models.StudentSelection.query.get(id)
+        studentSelection.confirm_comment=comment
         if status==0:
-            studentSelection.submit=0
-            studentSelection.confirm=0
-            db.session.commit()
-        else:
-            studentSelection.submit = 1
-            studentSelection.confirm = 1
-            db.session.commit()
+            if studentSelection.submit==1:
+                #commen submit
+                edit(studentSelection,0)
+            elif studentSelection.submit==2:
+                #apply resubmit
+                edit(studentSelection,1)
+        elif status==1:
+            if studentSelection.submit == 1:
+                # commen submit
+                edit(studentSelection, 1)
+            elif studentSelection.submit == 2:
+                # apply resubmit
+                edit(studentSelection, 0)
         return jsonRet()
     else:return jsonRet(-1,"参数不全")
 

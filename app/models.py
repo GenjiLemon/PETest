@@ -176,7 +176,7 @@ class StudentSelection(db.Model):
     year=db.Column(db.Integer,nullable=False)       #年份
     boy=db.Column(db.Integer,default=0)             #男生人数
     girl=db.Column(db.Integer,default=0)            #女生人数
-    submit=db.Column(db.Integer,default=0)          #提交状态，0未提交，1已提交
+    submit=db.Column(db.Integer,default=0)          #提交状态，0未提交，1submit，2 isapply reselect
     confirm=db.Column(db.Integer,default=0)         #审核状态,0审核不通过，1审核通过
     #0，0代表审核不通过 1，0代表已提交未审核 1，1代表审核通过 没有记录代表未提交
     submit_comment=db.Column(db.String(255),default="")        #提交备注
