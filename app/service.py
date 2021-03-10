@@ -241,9 +241,9 @@ def __addRankandName(schoolScoreDetails):
     return schoolScoreDetails
 
 #获取今年参与体测的学校ids，根据上传的名单来判断
-#分为本科和专科
+#分为本科和高职高专
 def getTestingSchoolids(year,school_type:str):
-    if school_type not in ['本科','专科']:
+    if school_type not in ['本科','高职高专']:
         #不时这两类直接返回
         return []
     res=StudentSelection.query.filter(StudentSelection.year==year).all()
@@ -538,6 +538,7 @@ def getTestingStudentSums(year:int,school_id):
     return sums
 
 #查询单个学生成绩
+#返回dict,name:score
 def getStudentScore(tstudent_id):
     #注意是从testingstudent里查
     res=db.session.execute(
@@ -550,6 +551,7 @@ def getStudentScore(tstudent_id):
     return ret
 
 #筛选查询成绩
+#返回一个dict数组，里面是所有信息以及score,id是tstudentid
 def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None):
     filter_list = []
     filter_list.append(TestingStudent.school_id == schoolid)

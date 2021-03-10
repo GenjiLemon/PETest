@@ -78,10 +78,13 @@ def calculateScorelist(scorelist,averageOnly=False):
     average=round(float(narray.mean()),2)
     if averageOnly:
         return average
-    excellent_rate=round(np.count_nonzero(narray >= 90)/len(scorelist),4)
-    good_rate=round(np.count_nonzero(narray >= 80)/len(scorelist),4)
-    pass_rate=round(np.count_nonzero(narray >= 60)/len(scorelist),4)
-    return average,excellent_rate,good_rate,pass_rate
+    else:
+        if len(scorelist)==0:
+            return 0,0,0,0
+        excellent_rate=round(np.count_nonzero(narray >= 90)/len(scorelist),4)
+        good_rate=round(np.count_nonzero(narray >= 80)/len(scorelist),4)
+        pass_rate=round(np.count_nonzero(narray >= 60)/len(scorelist),4)
+        return average,excellent_rate,good_rate,pass_rate
 
 
 #获取list的每个元素的排序list

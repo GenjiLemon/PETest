@@ -12,7 +12,7 @@ class School(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String(30),nullable=False)
     code=db.Column(db.String(10),unique=True)       #学校代码
-    type=db.Column(db.String(2))                    #学校类别，“本科”，“专科”
+    type=db.Column(db.String(4))                    #学校类别，“本科”，“高职高专”
 
     #让jsonify能正常执行，重写default方法，执行对象的serializable
     def serializable(self):

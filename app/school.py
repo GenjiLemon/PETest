@@ -30,10 +30,10 @@ def index():
     school=models.School.query.get(session['school_id'])
     return render_template('school/index.html',school=school)
 
-@school.route('/home',methods=['GET'])
-@login_required
-def home():
-    return render_template('school/welcome-1.html')
+# @school.route('/home',methods=['GET'])
+# @login_required
+# def home():
+#     return render_template('school/welcome-1.html')
 
 @school.route('/addStudent',methods=['GET'])
 @login_required

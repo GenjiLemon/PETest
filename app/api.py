@@ -181,8 +181,8 @@ def getSystemInit():
     type=request.args.get('type')
     if type=='1':
         homeInfo= {
-            "title":"首页",
-            "href":"/school/home"
+            "title":"学生名册导入",
+            "href":"/school/uploadStudent"
         }
         logoInfo={
             "title":"院校端",
@@ -198,11 +198,11 @@ def getSystemInit():
         return jsonify(init)
     elif type=='2':
         homeInfo = {
-            "title": "首页",
-            "href": "/province/home"
+            "title": "批量导入",
+            "href": "/province/uploadSchool"
         }
         logoInfo = {
-            "title": "厅端",
+            "title": "省厅端",
             "image": "/static/images/logo.png",
             "href": ""
         }
@@ -340,6 +340,60 @@ def school_schoolDetailScore():
         return jsonRet(data=ret)
     else:
         return jsonRet(-1,"参数不全")
+
+@api.route('downloadAllScores',methods=['GET'])
+@login_required
+def school_downloadAllScores():
+    year=request.args.get('year')
+    school_id=session.get('school_id')
+    school_name=models.School.query.get(school_id).name
+    if year:
+        out = BytesIO()
+        workbook = xlsxwriter.Workbook(out)
+        table = workbook.add_worksheet()
+        headstyle = workbook.add_format({
+            "bold": 1,  # 字体加粗
+            "align": "center",  # 对齐方式
+            "valign": "vcenter",  # 字体对齐方式
+        })
+        datastyle = workbook.add_format({
+            "align": "center",  # 对齐方式
+            "valign": "vcenter",  # 字体对齐方式
+        })
+        #只要头，第一行是头
+        title=['序号','学院（系）名称','年级','专业班级','姓名','性别','学号','体测年份','总分']+service.getProjectNames(year)
+        data=[]
+        th=0
+        tstudentscores=service.getMultipleStudentScore(school_id,year=year)
+        for e in tstudentscores:
+            th+=1
+            # 第五个开始时项目名
+            temp=[]
+            temp+=[th,e['college_name'],e['grade'],e['class_name'],e['name'],e['sex'],e['student_number'],e['year'],e['score']]
+            scoredict=service.getStudentScore(e['id'])
+            for i in range(9, len(title)):
+                score=scoredict.get(title[i])
+                #判断是否有这个成绩，没有跳过
+                if score:
+                    temp.append(score)
+                else:
+                    temp.append("")
+            data.append(temp)
+        table.write_row("A1", title, cell_format=headstyle)
+        # 每行数据添加
+        for i in range(0, len(data)):
+            line = data[i]
+            table.write_row('A' + str(i + 2), line, cell_format=datastyle)
+        workbook.close()
+        # 调整偏移到第一个
+        out.seek(0)
+        # 中文正常编码
+        filename = quote(school_name + str(year)+"年详细成绩表.xlsx")
+        rv = send_file(out, as_attachment=True, attachment_filename=filename)
+        rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+        return rv
+    else:
+        abort(404)
 #************************分割线************************
 
 @api.route('/downloadSchoolTemplate',methods=['GET'])
@@ -777,6 +831,18 @@ def province_schoolRank():
                 {"field": 'excellent_rank', "title": '优秀率排名'},
 				{"field": 'good_rank', "title": '优良率排名'},
 				{"field": 'pass_rank', "title": '及格率排名'},
+				{"field": 'testing_number', "title": '体测人数'},
+				{"field": 'boy_number', "title": '男生人数'},
+				{"field": 'girl_number', "title": '女生人数'},
+				{"field": 'excellent_number', "title": '优秀人数'},
+				{"field": 'excellent_boy_number', "title": '优秀男生人数'},
+				{"field": 'excellent_girl_number', "title": '优秀女生人数'},
+				{"field": 'good_number', "title": '良好人数'},
+				{"field": 'good_boy_number', "title": '良好男生人数'},
+				{"field": 'good_girl_number', "title": '良好女生人数'},
+				{"field": 'pass_number', "title": '及格人数'},
+				{"field": 'pass_boy_number', "title": '及格男生人数'},
+				{"field": 'pass_girl_number', "title": '及格女生人数'},
                 ]
             res=service.getTotalScoreRank(year,school_type)
             if res==False:
@@ -784,6 +850,8 @@ def province_schoolRank():
                 return jsonRet(-1,"参数有误")
             res=utils.addIdColumn(res,obj=True)
             return jsonRet(data={"title":title,"data":res})
+        elif type=="total":
+            pass
         else:
             #剩下情况为查看大type的各项指标
             level=int(type)

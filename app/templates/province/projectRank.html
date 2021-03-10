@@ -18,7 +18,7 @@
 								<select name="school_type"  lay-verify="required">
 									<option value=""></option>
 									<option value="本科">本科</option>
-									<option value="专科">专科</option>
+									<option value="高职高专">高职高专</option>
 								</select>
                             </div>
 						</div>
@@ -107,9 +107,10 @@
                 layer.msg("请选择院校类别");
                 return false;
             }
+            var index = layer.load(0, {shade:0.2}); //目前没有最长时间，直接运行到结束
             $.get('/api/projectRank',data.field,function(res){
 				if(res.code==0){
-				    console.log(res.data);
+				    layer.close(index);
 					var newdata=res.data;
 					table.reload("currentTableId",{data:newdata});
 				}

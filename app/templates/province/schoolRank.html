@@ -18,7 +18,7 @@
                                 <select name="school_type"  lay-verify="required">
                                 	<option value=""></option>
                                 	<option value="本科">本科</option>
-                                	<option value="专科">专科</option>
+                                	<option value="高职高专">高职高专</option>
                                 </select>
                             </div>
 						</div>
@@ -27,7 +27,7 @@
                             <div class="layui-input-inline">
                                <select name="type"  lay-verify="required">
 									<option value=""></option>
-									<option value="score">总分情况排名</option>
+									<option value="score">总体情况</option>
 									<option value="1">大一学生详细分数</option>
 									<option value="2">大二学生详细分数</option>
 									<option value="3">大三学生详细分数</option>
@@ -70,16 +70,17 @@
         }
 
         baseTitle=[
-                {field: 'id', title: '序号'},
-				{field: 'school_name', title: '学校名称'},
+                {field: 'id', title: '序号',minWidth:"30"},
+				{field: 'school_name', title: '学校名称',minWidth:"150"},
                 {field: 'score', title: '总得分', sort: true},
-                {field: 'pass_rate', title: '及格率', sort: "true",templet:passTrans},
-                {field: 'good_rate', title: '优良率', sort: "true",templet:goodTrans},
-                {field: 'excellent_rate', title: '优秀率', sort: "true",templet:excTrans}
+                {field: 'pass_rate', title: '及格率', sort: "true",templet:passTrans,minWidth:"100"},
+                {field: 'good_rate', title: '优良率', sort: "true",templet:goodTrans,minWidth:"100"},
+                {field: 'excellent_rate', title: '优秀率', sort: "true",templet:excTrans,minWidth:"100"}
             ]
         table.render({
             elem: '#currentTableId',
             data:[],
+            cellMinWidth:100,
             defaultToolbar: ['filter', 'exports', 'print'],
             toolbar:true,
             cols: [baseTitle],
@@ -91,8 +92,11 @@
 
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
+            var index = layer.load(0, {shade:0.2}); //目前没有最长时间，直接运行到结束
             $.get('/api/schoolRank',data=data.field,function(res){
 				if(res.code==0){
+				    layer.close(index);
+				    console.log(res.data);
 					var newdata=res.data['data'];
 					var newtitle=baseTitle.concat(res.data['title']);
 					table.reload("currentTableId",{data:newdata,cols:[newtitle]});
