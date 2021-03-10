@@ -101,6 +101,7 @@ def home():
 def projectRank():
     model = {}
     model['year'] = utils.getNowTestingYear()
+    model['project_names']=service.getProjectNames(model['year'])
     return render_template('province/projectRank.html',model=model)
 
 @province.route('/school')
@@ -146,5 +147,12 @@ def uploadSchool():
 @province.route('/uploadScore')
 @admin_required
 def uploadScore():
-    return render_template('province/uploadScore.html')
+    year=utils.getNowTestingYear()
+    res = models.StudentSelection.query.filter(models.StudentSelection.year == year).all()
+    schools = []
+    for e in res:
+        school = models.School.query.get(e.school_id)
+        if school:
+            schools.append({"id":school.id,"name":school.name})
+    return render_template('province/uploadScore.html',schools=schools)
 

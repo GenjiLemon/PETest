@@ -56,7 +56,6 @@
 
         $('#submit').bind('click',function(){
 			layer.prompt({title: '请输入提交备注，没有则留空', value: ' '}, function(value, index){
-			  console.log("点击了提交");
 			  $.post('/api/submitStudent',{comment:value},function(res){
 			        if(res.code==0){
 			            layer.msg("提交成功！");

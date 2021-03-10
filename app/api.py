@@ -148,35 +148,7 @@ def changePassword():
 @login_required
 def school_downloadScoreTemplate():
     school_id=session.get('school_id')
-    school=models.School.query.get(school_id)
-    year=getNowTestingYear()
-    #获取excel要导入的所有数据
-    data=service.getTemplateData(school_id,year)
-    out = BytesIO()
-    workbook = xlsxwriter.Workbook(out)
-    table = workbook.add_worksheet()
-    headstyle = workbook.add_format({
-        "bold": 1,  # 字体加粗
-        "align": "center",  # 对齐方式
-        "valign": "vcenter",  # 字体对齐方式
-    })
-    datastyle = workbook.add_format({
-        "align": "center",  # 对齐方式
-        "valign": "vcenter",  # 字体对齐方式
-    })
-    #先加头部
-    table.write_row("A1",data[0],cell_format=headstyle)
-    #每行数据添加
-    for i in range(1,len(data)):
-        line=data[i]
-        table.write_row('A'+str(i+1), line,cell_format=datastyle)
-    workbook.close()
-    #调整偏移到第一个
-    out.seek(0)
-    #中文正常编码
-    filename = quote(school.name+".xlsx")
-    rv = send_file(out, as_attachment=True, attachment_filename=filename)
-    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+    rv=service.downloadScoreTemplate(school_id)
     return rv
     #参考https://www.cnblogs.com/renguiyouzhi/p/11874479.html
 
@@ -305,13 +277,13 @@ def school_submitStudent():
 
 @api.route('/applyResubmit',methods=['POST'])
 @login_required
-def school_submitStudent():
+def school_applyResubmit():
     #apply submit to 2 comment to empty
     #if confirm submit to 0 confirm to 0
     #else submit to 1,same to before
     year=getNowTestingYear()
     schoolid=session['school_id']
-    #find selection before
+    #find selection before   StudentSelection=models.StudentSelection
     StudentSelection=models.StudentSelection
     studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==schoolid).first()
     if studentSelection:
@@ -825,3 +797,10 @@ def province_schoolRank():
             else:return jsonRet(-1,"参数有误")
     else:
         return jsonRet(-1,"参数缺失")
+
+@api.route('/downloadScoreTemplateProvince',methods=['GET'])
+@admin_required
+def school_downloadScoreTemplateProvince():
+    school_id=request.args.get('school_id')
+    rv=service.downloadScoreTemplate(school_id)
+    return rv

@@ -1,5 +1,9 @@
 #此文件为中间服务类
-from flask import session
+from io import BytesIO
+from urllib.parse import quote
+
+import xlsxwriter
+from flask import session, send_file
 from sqlalchemy import desc
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db,app
@@ -819,6 +823,7 @@ def getSubmitStatus(school_id,year):
         return studentSelection.submit+studentSelection.confirm
     else:return -1
 
+#get all project names (distinct)
 def getProjectNames(year):
     projects=getYearAllProject(year)
     ret=[]
@@ -837,3 +842,35 @@ def getYearAllProject(year):
     #筛选后合并
     projects=boy+girl
     return projects
+
+def downloadScoreTemplate(school_id):
+    school = School.query.get(school_id)
+    year = utils.getNowTestingYear()
+    # 获取excel要导入的所有数据
+    data = getTemplateData(school_id, year)
+    out = BytesIO()
+    workbook = xlsxwriter.Workbook(out)
+    table = workbook.add_worksheet()
+    headstyle = workbook.add_format({
+        "bold": 1,  # 字体加粗
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    datastyle = workbook.add_format({
+        "align": "center",  # 对齐方式
+        "valign": "vcenter",  # 字体对齐方式
+    })
+    # 先加头部
+    table.write_row("A1", data[0], cell_format=headstyle)
+    # 每行数据添加
+    for i in range(1, len(data)):
+        line = data[i]
+        table.write_row('A' + str(i + 1), line, cell_format=datastyle)
+    workbook.close()
+    # 调整偏移到第一个
+    out.seek(0)
+    # 中文正常编码
+    filename = quote(school.name + ".xlsx")
+    rv = send_file(out, as_attachment=True, attachment_filename=filename)
+    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
+    return rv

@@ -25,7 +25,12 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">查看项目</label>
                             <div class="layui-input-inline">
-                                <input type="text" name="project" autocomplete="off" class="layui-input" lay-verify="required">
+                                <select name="project" lay-verify="required">
+                                   <option value="">请选择项目</option>
+                                    {% for e in model['project_names'] %}
+                                        <option value={{e}}>{{e}}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
 						</div>
                         <div class="layui-inline">

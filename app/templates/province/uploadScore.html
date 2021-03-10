@@ -5,15 +5,49 @@
 <link rel="stylesheet" href="/static/layuimini/lib/jq-module/zyupload/skins/zyupload-1.0.0.min.css" media="all">
 <div class="layuimini-container layuimini-page-anim">
     <div class="layuimini-main">
+		<div class="layui-form content-margin" lay-filter="schoolForm" style="width:400px" >
+			<select name="school_id" >
+			  <option value="">请选择学校</option>
+				{% for e in schools %}
+			  		<option value={{e['id']}}>{{e['name']}}</option>
+			  	{% endfor %}
+			</select>
+			<div class="content-margin"><button class="layui-btn layui-btn-lg" id="download">下载校成绩模板</button></div>
+		</div>
+
 		<div id="zyupload" class="zyupload"></div>
+		<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseAll">一键计算所有成绩</button></div>
 	</div>
 
-	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseAll">一键计算所有成绩</button></div>
+
 <!--	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseStudent">点击计算学生成绩</button></div>-->
 <!--	<div class="content-margin"><button class="layui-btn layui-btn-lg" id="analyseSchool">点击计算学校成绩</button></div>-->
 </div>
 
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            miniPage = layui.miniPage;
 
+			form.render();
+			$('#download').bind('click',function(){
+				data=form.val("schoolForm")
+				console.log(data);
+				school_id=data.school_id
+				if (school_id==""){
+					layer.alert("请先选择学校！");
+					return;
+				}
+				else{
+					window.location.href='/api/downloadScoreTemplateProvince?school_id='+school_id;
+				}
+
+			});
+
+    });
+</script>
 <script src="/static/layuimini/lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
 <script src="/static/layuimini/lib/jq-module/zyupload/zyupload-1.0.0.min.js" charset="utf-8"></script>
 <script type="text/javascript">
@@ -84,6 +118,7 @@
 				}
 			})
 		});
+
 
     });
 </script>
