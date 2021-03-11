@@ -65,6 +65,11 @@ def schoolScore():
 def selectStudent():
     return render_template('school/selectStudent.html')
 
+@school.route('/removeTStudent',methods=['GET'])
+@login_required
+def removeTStudent():
+    return render_template('school/removeTStudent.html')
+
 @school.route('/studentScore',methods=['GET'])
 @login_required
 def studentScore():

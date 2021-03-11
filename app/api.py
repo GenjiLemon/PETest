@@ -84,18 +84,19 @@ def school_student():
         else: return jsonRet(-1,"更新失败")
     else: return jsonRet(-1)
 
-@api.route('/testingStudent',methods=["GET","POST"])
+@api.route('/testingStudent',methods=["GET","POST","DELETE"])
 @login_required
 def school_testingStudent():
     if request.method=="GET":
         data=request.args.to_dict()
-        data=service.getMultipleStudentScore(session.get('school_id'),data.get('grade'),data.get('college_name'),data.get('student_number'),data.get('year'),data.get('name'))
+        year=utils.getNowTestingYear()
+        data=service.getMultipleStudentScore(schoolid=session.get('school_id'),grade=data.get('grade'),college=data.get('college_name'),class_name=data.get('class_name'),year=year)
         return jsonRet(data=data)
     if request.method=="POST":
         status=service.getSubmitStatus(session.get('school_id'),utils.getNowTestingYear())
-        if status==1 or status==2:
+        if status!=0:
             #检查今年名单是否添加
-            return jsonRet(-1,"您已提交审核，不能再添加学生。")
+            return jsonRet(-1,"您已提交审核或在审核中，不能再添加学生。")
         idsstr=request.form.get('student_ids')
         if idsstr:
             ids=idsstr.split(",")
@@ -105,6 +106,18 @@ def school_testingStudent():
             ret['success_num']=service.selectStudents(ids,getNowTestingYear())
             return jsonRet(data=ret)
         else:return jsonRet(-1,"没有找到id参数")
+    elif request.method=="DELETE":
+        idsstr = request.form.get('tstudent_ids')
+        if idsstr:
+            ids=idsstr.split(",")
+            map(int,ids)
+            for e in ids:
+                tstudent=models.TestingStudent.query.get(e)
+                db.session.delete(tstudent)
+            db.session.commit()
+            return jsonRet()
+        else:
+            return jsonRet(-1, "没有找到id参数")
     else: abort(404)
 
 #获取历史体测成绩抽取情况
@@ -341,6 +354,17 @@ def school_schoolDetailScore():
         return jsonRet(data=ret)
     else:
         return jsonRet(-1,"参数不全")
+
+@api.route('/getSubmitStatus',methods=['GET'])
+@login_required
+def school_getSubmitStatus():
+    year=getNowTestingYear()
+    school_id=session['school_id']
+    studentSelection=models.StudentSelection.query.filter(models.StudentSelection.year==year,models.StudentSelection.school_id==school_id).first()
+    if studentSelection:
+        return jsonRet(data=studentSelection.submit)
+    #说明没找到
+    else:return jsonRet(data=-1)
 
 @api.route('downloadAllScores',methods=['GET'])
 @login_required
@@ -594,15 +618,14 @@ def province_checkTestingStudent():
     def edit(studentSelection,num):
         studentSelection.submit = num
         studentSelection.confirm = num
-        db.session.commit()
     id=request.form.get('id')
     status=request.form.get('status')
     comment=request.form.get('comment')
     if id and status!=None:
         status=int(status)
         studentSelection=models.StudentSelection.query.get(id)
-        studentSelection.confirm_comment=comment
         if status==0:
+            studentSelection.confirm_comment = comment
             if studentSelection.submit==1:
                 #commen submit
                 edit(studentSelection,0)
@@ -615,7 +638,9 @@ def province_checkTestingStudent():
                 edit(studentSelection, 1)
             elif studentSelection.submit == 2:
                 # apply resubmit
+                studentSelection.confirm_comment=""
                 edit(studentSelection, 0)
+        db.session.commit()
         return jsonRet()
     else:return jsonRet(-1,"参数不全")
 
@@ -872,7 +897,8 @@ def province_schoolRank():
 
 @api.route('/downloadScoreTemplateProvince',methods=['GET'])
 @admin_required
-def school_downloadScoreTemplateProvince():
+def province_downloadScoreTemplateProvince():
     school_id=request.args.get('school_id')
     rv=service.downloadScoreTemplate(school_id)
     return rv
+

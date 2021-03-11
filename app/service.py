@@ -552,7 +552,7 @@ def getStudentScore(tstudent_id):
 
 #筛选查询成绩
 #返回一个dict数组，里面是所有信息以及score,id是tstudentid
-def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None):
+def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=None,name=None,class_name=None):
     filter_list = []
     filter_list.append(TestingStudent.school_id == schoolid)
     if name and name!='':
@@ -565,6 +565,8 @@ def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=No
         filter_list.append(Student.grade == grade)
     if year and year!='':
         filter_list.append(TestingStudent.year == year)
+    if class_name:
+        filter_list.append(Student.class_name == class_name)
     res=TestingStudent.query.join(Student).filter(*filter_list).all()
     ret=[]
     for e in res:

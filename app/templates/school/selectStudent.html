@@ -55,11 +55,14 @@
 
 		<table class="layui-hide" id="studentTableId" lay-filter="studentTableFilter"></table>
 		<div>已经抽取信息</div>
+
+        <script type="text/html" id="tstudentToolBar">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="edit"> 编辑已选学生 </button>
+            </div>
+        </script>
         <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
 		<div>历史抽取信息</div>
-<!--		<script type="text/html" id="previousStudentBar">-->
-<!--		    <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="detail">查看详情</a>-->
-<!--		</script>-->
 		<table class="layui-hide" id="previousStudentId" lay-filter="previousStudentFilter"></table>
         
 
@@ -139,7 +142,7 @@
         table.render({
             elem: '#currentTableId',
             url: '/api/testingGradeStudent',
-            toolbar: true,
+            toolbar: "#tstudentToolBar",
             defaultToolbar: ['filter', 'exports', 'print'],
             cols: [[
                 {field: 'grade', title: '年级'},
@@ -153,7 +156,30 @@
             skin: 'line'
         });
 
-        
+        //监听添加
+		table.on('toolbar(currentTableFilter)',function(obj){
+			if(obj.event === 'edit'){
+                $.get('/api/getSubmitStatus',function(res){
+                    if(res.code==0){
+                        data=res.data
+                        //没找到说明还没提交完全可以修改
+                        if(data==-1){
+                            miniPage.hashChange("/school/removeTStudent")
+                        }
+                        else if(data!=0){
+                            layer.msg("您已通过审核，或在审核中，无法修改体测学生。")
+                        }
+                        else{
+                            miniPage.hashChange("/school/removeTStudent")
+                        }
+
+                    }
+                })
+                return false;
+			}
+		});
+
+
 		table.render({
 		    elem: '#previousStudentId',
 		    url: '/api/getTestingSelectionBefore',
@@ -169,8 +195,7 @@
 		    page: true,
 		    skin: 'line'
 		});
-		
-<!--
+
         
 
     });
