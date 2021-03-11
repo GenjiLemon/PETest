@@ -265,6 +265,16 @@ def school_uploadStudent():
         return jsonRet(msg="新增了{}个学生".format(count),code=0)
     return jsonRet(-1,msg="没有找到上传文件")
 
+@api.route('/getClassnames',methods=['GET'])
+@login_required
+def school_getClassnames():
+    college_name=request.args.get('college_name')
+    if college_name:
+        school_id = session.get('school_id')
+        class_names=models.Student.query.with_entities(models.Student.class_name).filter(
+            models.Student.school_id == school_id,models.Student.college_name==college_name).distinct().order_by(models.Student.class_name).all()
+        return jsonRet(data=[e[0] for e in class_names])
+    else:return jsonRet(-1,"参数错误")
 
 @api.route('/submitStudent',methods=['POST'])
 @login_required

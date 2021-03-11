@@ -9,19 +9,31 @@
                         <div class="layui-inline">
                             <label class="layui-form-label">年级</label>
                             <div class="layui-input-inline">
-								<input type="text" name="grade" autocomplete="off" class="layui-input">
+                                <select class="layui-inline" name="grade" >
+                                	<option value="">所有年级</option>
+                                    {% for e in model['grades']%}
+                                	<option value="{{e}}">{{e}}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
 						<div class="layui-inline">
 							<label class="layui-form-label">学院</label>
 							<div class="layui-input-inline">
-								<input type="text" name="college_name" autocomplete="off" class="layui-input">
+							    <select class="layui-inline" name="college_name"  lay-search lay-filter="collegeSelect">
+									<option value="">请选择学院</option>
+                                    {% for e in model['colleges']%}
+									<option value="{{e}}">{{e}}</option>
+                                    {% endfor %}
+							    </select>
 							</div>
 						 </div>
 						 <div class="layui-inline">
-						     <label class="layui-form-label">姓名</label>
+						     <label class="layui-form-label">专业班级</label>
 						     <div class="layui-input-inline">
-								 <input type="text" name="major_name" autocomplete="off" class="layui-input">
+						         <select class="layui-inline" name="class_name" id="class_name" lay-search>
+						         	<option value="">请选择专业班级</option>
+						         </select>
 						     </div>
 						 </div>
                         <div class="layui-inline">
@@ -52,7 +64,20 @@
             form = layui.form,
             table = layui.table,
             miniPage = layui.miniPage;
-
+        form.render();
+		//学院选完之后，专业自动跳出来
+        form.on('select(collegeSelect)', function(data){
+          $.get('/api/getClassnames?college_name='+data.value,function(res){
+                if(res.code==0){
+                    $("#class_name").empty();
+                    $("#class_name").append("<option value=''>请选择专业班级</option>");
+                    $.each(res.data,function(k,v){
+                        $("#class_name").append("<option value="+v+">"+v+"</option>");
+                    })
+                    form.render();
+                }
+          })
+        });
 
 		table.render({
 			elem: '#studentTableId',

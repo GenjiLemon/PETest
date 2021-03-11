@@ -63,12 +63,26 @@ def schoolScore():
 @school.route('/selectStudent',methods=['GET'])
 @login_required
 def selectStudent():
-    return render_template('school/selectStudent.html')
+    school_id=session.get('school_id')
+    grades=models.Student.query.with_entities(models.Student.grade).filter(models.Student.school_id==school_id).distinct().order_by(models.Student.grade).all()
+    colleges=models.Student.query.with_entities(models.Student.college_name).filter(models.Student.school_id==school_id).distinct().order_by(models.Student.college_name).all()
+    model={}
+    model['grades']=[a[0] for a in grades]
+    model['colleges']=[a[0] for a in colleges]
+    return render_template('school/selectStudent.html',model=model)
 
 @school.route('/removeTStudent',methods=['GET'])
 @login_required
 def removeTStudent():
-    return render_template('school/removeTStudent.html')
+    school_id = session.get('school_id')
+    grades = models.Student.query.with_entities(models.Student.grade).filter(
+        models.Student.school_id == school_id).distinct().order_by(models.Student.grade).all()
+    colleges = models.Student.query.with_entities(models.Student.college_name).filter(
+        models.Student.school_id == school_id).distinct().order_by(models.Student.college_name).all()
+    model = {}
+    model['grades'] = [a[0] for a in grades]
+    model['colleges'] = [a[0] for a in colleges]
+    return render_template('school/removeTStudent.html',model=model)
 
 @school.route('/studentScore',methods=['GET'])
 @login_required
