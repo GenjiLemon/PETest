@@ -13,7 +13,7 @@
         {% if model['status']==1 or model['status']==2 %}
             <div class="content-margin">
                 <button class="layui-btn layui-btn-disabled" >已提交</button>
-                <button class="layui-btn layui-btn-g" >申请重新提交 <button>
+                <button class="layui-btn layui-btn-lg" id="resubmit">申请撤回并重新提交 </button>
             </div>
         {% elif model['status']==0 %}
             <div class="content-margin"><button class="layui-btn layui-btn-lg" id="submit">重新提交</button></div>
@@ -71,9 +71,25 @@
 			});
 		});
 
-		$('#download').bind('click',function(){
-			window.location.href='/api/downloadScoreTemplate';
+		$('#resubmit').bind('click',function(){
+			layer.prompt({title: '请输入提交备注，没有则留空', value: ' '}, function(value, index){
+			  $.post('/api/applyResubmit',{comment:value},function(res){
+			        if(res.code==0){
+			            layer.msg("提交成功！");
+			            layer.close(index);
+			            //动用主页的刷新，手动刷新界面
+                        $("a[data-refresh]").click();
+			        }
+			        else{
+			            layer.msg("提交失败！"+res.msg);
+			        }
+			  })
+
+			});
 		});
+		$('#download').bind('click',function(){
+		    window.location.href="/api/downloadScoreTemplate";
+		})
 
 
 

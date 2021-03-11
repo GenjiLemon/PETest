@@ -104,6 +104,8 @@ def submitStatus():
         status_word="审核中"
     elif status==2:
         status_word="审核已通过"
+    elif status==3:
+        status_word="申请重新提交中"
     model={}
     model['status_word']=status_word
     model['status']=status
