@@ -4,7 +4,12 @@
         <div class="layui-form-item">
             <label class="layui-form-label required">学校名称</label>
             <div class="layui-input-block">
-                <input type="text" name="school_name" lay-verify="required" lay-reqtext="姓名不能为空"  value="" class="layui-input">
+                <select class="layui-inline" name="school_name"  lay-search lay-verify="required">
+                    <option value="">请选择学校</option>
+                    {% for e in model['schools']%}
+                    <option value="{{e}}">{{e}}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
 		<div class="layui-form-item">

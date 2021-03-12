@@ -131,6 +131,7 @@ def submitStatus():
     StudentSelection=models.StudentSelection
     studentSelection = StudentSelection.query.filter(StudentSelection.year == year,
                                                      StudentSelection.school_id == school_id).first()
-    model['submit_comment']=studentSelection.submit_comment
-    model['confirm_comment']=studentSelection.confirm_comment
+    if studentSelection:
+        model['submit_comment']=studentSelection.submit_comment
+        model['confirm_comment']=studentSelection.confirm_comment
     return render_template('school/submitStatus.html',model=model)

@@ -50,9 +50,10 @@
             page: true,
             skin: 'line'
         });
-
+         var index=layer.load(0,{shade:0.2,time: 10*1000})
          $.get('/api/getTestingStudent?id='+$('#id').text(),function(res){
             if(res.code==0){
+                layer.close(index);
                 newdata=res.data?res.data:[];
                 table.reload('currentTableId',{data:newdata});
             }

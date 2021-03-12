@@ -50,6 +50,8 @@ def login():
             user=account.query.filter(account.username==username).first()
             if user and check_password_hash(user.password,password):
                 if user.type==1:
+                    if models.School.query.get(user.school_id) == None:
+                        return jsonRet(-1,"学校不存在！")
                     session['user_id'] = user.id
                     session['school_id'] = user.school_id
                     return jsonRet(data={"url":"/school/index"})
@@ -58,7 +60,7 @@ def login():
                     session['secret']='faybaba'
                     return jsonRet(data={"url":"/province/index"})
         #没有提前返回的都错了
-        return jsonRet(code=-1)
+        return jsonRet(code=-1,msg="账号或密码错误！")
 
 
 @app.route('/changePassword')

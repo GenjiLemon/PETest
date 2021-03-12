@@ -51,6 +51,8 @@ def gradeToInt(s):
     except:
         if s[-1]=="级" and len(s)==5:
             return int(s[0:4])
+        elif s[-1] == "级" and len(s) == 3:
+            return 2000+int(s[0:2])
         else:
             raise Exception("grade error")
 

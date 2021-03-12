@@ -66,6 +66,7 @@
         form.on('submit(data-search-btn)', function (data) {
             $.get('/api/account',data=data.field,function(res){
                 if(res.code==0){
+                    console.log(res);
                     newdata=res.data?res.data:[]
                     table.reload('currentTableId',{data:newdata});
                 }

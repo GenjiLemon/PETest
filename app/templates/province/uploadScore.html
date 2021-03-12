@@ -41,7 +41,7 @@
 					return;
 				}
 				else{
-					window.location.href='/api/downloadScoreTemplateProvince?school_id='+school_id;
+					window.open('/api/downloadScoreTemplateProvince?school_id='+school_id,'_blank');
 				}
 
 			});
@@ -83,7 +83,7 @@
 
 		//计算所有
 		$('#analyseAll').bind('click',function(){
-			var index = layer.load(0, {shade:0.5}); //目前没有最长时间，直接运行到结束
+			var index = layer.load(0, {shade:0.5,time: 10*1000}); //目前没有最长时间，直接运行到结束
 			$.post('/api/calculateAll',function(res){
 				layer.close(index);
 				if(res.code==0){

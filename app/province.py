@@ -30,7 +30,10 @@ def index():
 @province.route('/addAccount')
 @admin_required
 def addAccount():
-    return render_template('province/addAccount.html')
+    schools=models.School.query.with_entities(models.School.name).all()
+    model={}
+    model['schools']=[e[0] for e in schools]
+    return render_template('province/addAccount.html',model=model)
 
 @province.route('/addProject')
 @admin_required

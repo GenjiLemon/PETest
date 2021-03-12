@@ -11,6 +11,11 @@ from sqlalchemy import and_,or_
 from .utils import *
 api = Blueprint('api',__name__)
 
+# 捕捉所有500
+@api.errorhandler(Exception)
+def error_500(error):
+    return jsonRet(-2,"系统错误")
+
 #检查userid
 def login_required(func):
     @functools.wraps(func)#修饰内层函数，防止当前装饰器去修改被装饰函数__name__的属性
@@ -94,7 +99,7 @@ def school_testingStudent():
         return jsonRet(data=data)
     if request.method=="POST":
         status=service.getSubmitStatus(session.get('school_id'),utils.getNowTestingYear())
-        if status!=0:
+        if status!=0 and status!=-1:
             #检查今年名单是否添加
             return jsonRet(-1,"您已提交审核或在审核中，不能再添加学生。")
         idsstr=request.form.get('student_ids')
@@ -147,6 +152,7 @@ def school_testingGradeStudent():
     #加个id栏
     count=len(data)
     return jsonRet(data=data,count=count)
+
 @api.route('/changePassword',methods=['POST'])
 @login_required
 def changePassword():
@@ -260,7 +266,7 @@ def school_uploadStudent():
                 e[4]=1
             else:
                 e[4]=0
-        count= len(data)-1
+        count= len(data)
         service.quickInsert(models.Student,header,data)
         return jsonRet(msg="新增了{}个学生".format(count),code=0)
     return jsonRet(-1,msg="没有找到上传文件")
@@ -545,7 +551,9 @@ def province_account():
             accounts = models.Account.query.filter(models.Account.type==1).all()
             for e in accounts:
                 school=models.School.query.get(e.school_id)
-                e.name=school.name
+                if school:
+                    e.name=school.name
+                else:e.name=""
             return jsonRet(data=accounts)
     elif request.method=='POST':
         school_name=request.form.get('school_name')
@@ -554,6 +562,8 @@ def province_account():
         if school_name and username and password:
             school=models.School.query.filter(models.School.name==school_name).first()
             if school:
+                if models.Account.query.filter(models.Account.username==username).first()!=None:
+                    return jsonRet(-1,"用户名已存在！")
                 account=models.Account()
                 account.school_id=school.id
                 account.username=username

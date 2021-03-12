@@ -87,7 +87,7 @@
                 {field: 'grade', title: '年级', sort: true},
                 {field: 'class_name', title: '专业班级', sort: true},
                 {field: 'name', title: '姓名', sort: true},
-                {field: 'sex',  title: '性别', sort: true},
+                {field: 'sex',  title: '性别', sort: true,templet:function(e){return e.sex==0?"女":"男";}},
 				{field: 'student_number',  title: '学号', sort: true, minWidth: 150},
                 {field: 'year',  title: '体测年份'},
                 {field: 'score',  title: '总分'},
@@ -135,9 +135,11 @@
        table.on('toolbar(currentTableFilter)',function(obj){
             if (obj.event=="dowonloadScore"){
                 year=form.val('serchForm').year
-                layer.confirm("您确定要下载"+year+"年的所有数据吗？",function(){
-                    window.location.href="/api/downloadAllScores?year="+year;
+                var index=layer.confirm("您确定要下载"+year+"年的所有数据吗？",function(){
+                    window.open("/api/downloadAllScores?year="+year,'_blank');
+                    layer.close(index);
                 })
+
             }
        })
        var refreshTable=function(){

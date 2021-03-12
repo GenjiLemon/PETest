@@ -422,7 +422,7 @@ def getStudentSumByGrade(grade,school_id):
 def getStudentSums(school_id):
     sums=[]
     #先查出所有的grade，再拿grade查出每个年级的情况
-    res=Student.query.with_entities(Student.grade).distinct().order_by(Student.grade.desc()).all()
+    res=Student.query.with_entities(Student.grade).distinct().filter(Student.school_id==school_id).order_by(Student.grade.desc()).all()
     for e in res:
         sums.append(getStudentSumByGrade(e[0],school_id))
     return sums
@@ -532,7 +532,7 @@ def getTestingStudentSums(year:int,school_id):
     #year为2018代表体测年2018，及2018-2019
     sums=[]
     #先查出所有的grade，再拿grade查出每个年级的情况
-    res=TestingStudent.query.join(Student).filter().with_entities(Student.grade).filter(TestingStudent.year==year).distinct().order_by(Student.grade.desc()).all()
+    res=TestingStudent.query.join(Student).filter(TestingStudent.school_id==school_id).with_entities(Student.grade).filter(TestingStudent.year==year).distinct().order_by(Student.grade.desc()).all()
     for e in res:
         sums.append(getTestingStudentSumByGrade(e[0],year,school_id))
     return sums
@@ -819,8 +819,8 @@ def quickInsert(model,columns,data):
     )
     db.session.commit()
 
-##按照confirm和submit的和来算 0，0代表未提交或者审核不通过 1，0代表已提交未审核 1，1代表审核通过  没有记录代表未提交
-## 所以 返回0 1 2 -1 4种状况
+##按照confirm和submit的和来算 0，0代表未提交或者审核不通过 1，0代表已提交未审核 1，1代表审核通过  没有记录代表未提交 2,1代表提交申请重选
+## 所以 返回0 1 2 -1 3    5种状况
 def getSubmitStatus(school_id,year):
     studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==school_id).first()
     if studentSelection:
@@ -874,7 +874,7 @@ def downloadScoreTemplate(school_id):
     # 调整偏移到第一个
     out.seek(0)
     # 中文正常编码
-    filename = quote(school.name + ".xlsx")
+    filename = quote(school.name + "成绩模板.xlsx")
     rv = send_file(out, as_attachment=True, attachment_filename=filename)
     rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
     return rv

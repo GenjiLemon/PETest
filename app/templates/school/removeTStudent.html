@@ -91,7 +91,7 @@
 				{field: 'grade', title: '年级', sort: true},
 				{field: 'class_name', title: '专业班级', sort: true},
 				{field: 'name', title: '姓名', sort: true},
-				{field: 'sex',  title: '性别', sort: true},
+				{field: 'sex',  title: '性别', sort: true,templet:function(d){return d.sex==0?"女":"男";}},
 				{field: 'student_number',  title: '学号', sort: true, minWidth: 150},
 				{field: 'comment',  title: '备注'},
 				{title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
@@ -107,7 +107,9 @@
 
 			// 监听搜索操作
 		form.on('submit(data-search-btn)', function (data) {
+		    var index=layer.load(0,{shade:0.2,time: 10*1000})
 		    $.get("/api/testingStudent",data.field,function(res){
+		        layer.close(index);
                  newdata=res.code==0?res.data:[];
                 //执行搜索重载
                 table.reload('studentTableId', {
