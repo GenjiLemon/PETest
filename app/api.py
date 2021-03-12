@@ -6,14 +6,18 @@ import xlsxwriter
 from flask import Blueprint, render_template, request, jsonify, session, send_file
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash,check_password_hash
-from app import db, models, service, utils
+from app import db, models, service, utils,app
 from sqlalchemy import and_,or_
 from .utils import *
 api = Blueprint('api',__name__)
 
-# 捕捉所有500
+# 捕捉所有500,并记录日志
 @api.errorhandler(Exception)
 def error_500(error):
+    th=0
+    for e in error.args:
+        th+=1
+        app.logger.exception("api500({}):".format(th)+e)
     return jsonRet(-2,"系统错误")
 
 #检查userid
@@ -551,6 +555,7 @@ def province_account():
             accounts = models.Account.query.filter(models.Account.type==1).all()
             for e in accounts:
                 school=models.School.query.get(e.school_id)
+
                 if school:
                     e.name=school.name
                 else:e.name=""

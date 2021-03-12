@@ -1,10 +1,19 @@
 from flask import Flask, url_for, request, redirect, render_template, session
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
+import logging
 app = Flask(__name__)
 app.config.from_object('config')
 app.secret_key="I9XZH67Pb%0I"
 db = SQLAlchemy(app)
+handler = logging.FileHandler('./log/flask.log', encoding='UTF-8')
+handler.setLevel(logging.DEBUG)
+logging_format = logging.Formatter(
+    '%(asctime)s - %(levelname)s -%(pathname)s- %(filename)s - %(funcName)s - %(lineno)s - %(message)s'
+)
+handler.setFormatter(logging_format)
+app.logger.addHandler(handler)
+
 #顺序生成视图、模型、创建数据库等
 from app import views,models
 app.debug = True
