@@ -39,6 +39,7 @@ $(function () {
             /* 外部获得的回调接口 */
             onSuccess: function (file, response) {          // 文件上传成功的回调方法
                 res=$.parseJSON(response);
+                layer.closeAll();
                 if(res.code==0){
                      layer.alert("导入成功！"+res.msg,{icon:1})
                 }
@@ -53,5 +54,8 @@ $(function () {
          $('#download').bind('click',function(){
             window.open('/api/downloadSchoolTemplate','_blank');
 		});
+		$(".upload_btn").bind("click",function(res){
+             layer.load(0,{shade:0.2,time:100*1000});
+		})
     });
 </script>

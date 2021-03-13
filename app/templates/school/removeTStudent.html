@@ -130,6 +130,7 @@
                     $.each(checkStatus.data,function(index,e){
                         tstudent_ids.push(e.id);
                     });
+                    var index=layer.load(0,{shade:0.2});
                     $.ajax({
                         method:"DELETE",
                         url:"/api/testingStudent",
@@ -142,6 +143,9 @@
                             else{
                                 layer.msg("删除失败！"+res.msg)
                             }
+                        },
+                        complete:function(res){
+                            layer.close(index);
                         }
                     })
                 })

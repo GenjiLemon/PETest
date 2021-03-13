@@ -298,6 +298,10 @@ def school_submitStudent():
     StudentSelection=models.StudentSelection
     studentSelection=StudentSelection.query.filter(StudentSelection.year==year,StudentSelection.school_id==schoolid).first()
     if studentSelection:
+        #更新男生女生人数
+        ret = service.getTestingStudentNum(schoolid, year)
+        studentSelection.boy=ret['boy']
+        studentSelection.girl=ret['girl']
         studentSelection.submit_comment=comment
         studentSelection.submit=1
         studentSelection.confirm = 0

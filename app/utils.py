@@ -66,12 +66,17 @@ def getNowTestingYear():
 
 #传入 name(备注) 返回name
 def getProjectName(title):
-    end=title.find('(')
-    if end==-1:
-        return title
+    if isinstance (title,str):
+        end=title.find('(')
+        if end==-1:
+            return title
+        else:
+            return title[:end]
     else:
-        return title[:end]
-
+        try:
+            return str(title)
+        except:
+            return ""
 
 #传入scorelist 传回平均值 优秀率 良好率 及格率
 def calculateScorelist(scorelist,averageOnly=False):
@@ -92,7 +97,7 @@ def calculateScorelist(scorelist,averageOnly=False):
 #获取list的每个元素的排序list
 def getOrderList(datalist):
     cplist = datalist[:]
-    cplist.sort()
+    cplist.sort(reverse=True)
     ret=[]
     for e in datalist:
         ret.append(cplist.index(e) + 1)

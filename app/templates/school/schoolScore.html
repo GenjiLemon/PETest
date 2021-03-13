@@ -37,13 +37,13 @@
             miniPage = layui.miniPage;
 			
         var excTrans=function(d){
-            return (d.excellent_rate*100)+"%"
+            return Number(d.excellent_rate*100).toFixed(2)+"%"
         }
         var goodTrans=function(d){
-            return (d.good_rate*100)+"%"
+            return Number(d.good_rate*100).toFixed(2)+"%"
         }
         var passTrans=function(d){
-            return (d.pass_rate*100)+"%"
+            return Number(d.pass_rate*100).toFixed(2)+"%"
         }
         table.render({
             elem: '#generalScoreId',
@@ -92,12 +92,14 @@
             $.get('/api/schoolTotalScore',data.field,function(res){
                 if(res.code==0){
                     newdata=res.data?res.data:[]
+                    console.log(newdata)
                     table.reload('generalScoreId', {data:newdata})
                 }
             })
             $.get('/api/schoolDetailScore',data.field,function(res){
                 if(res.code==0){
                     newdata=res.data?res.data:[]
+                    console.log(newdata)
                     table.reload('detailScoreId', {data:newdata})
                 }
             })

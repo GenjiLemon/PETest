@@ -76,7 +76,7 @@
                 });
                 }
                 else if (obj.event === 'checkFalse') {   // 监听审核不通过
-                    layer.prompt({title: '请输入审核备注，没有则留空', value: ' '}, function(value, index){
+                    layer.prompt({title: '请输入审核备注', value: ' '}, function(value, index){
                     $.post('/api/checkTestingStudent',{id:$('#id').text(),status:0,comment:value},function(res){
                         if(res.code==0){
                             layer.close(index);

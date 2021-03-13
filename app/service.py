@@ -104,7 +104,7 @@ def getSelectProjects(year,sex):
 #正常返回school id 不对就返回False
 def checkScoreExcel(data):
     template=getTemplateData(-1,utils.getNowTestingYear())
-    if data[0]==template[0]:
+    if data[0][:len(template[0])]==template[0]:
         school_name=data[1][1]
         school=School.query.filter(School.name==school_name).first()
         if school:
@@ -454,7 +454,14 @@ def selectStudents(studentids,year:int):
                 testingStudent=TestingStudent()
                 testingStudent.year=year
                 # year等于2018 说明2018-2019年的体测，2018级的学生属于大一
-                testingStudent.level=year-gradeToInt(student.grade)+1
+                level=year-gradeToInt(student.grade)+1
+                #年级矫正
+                if level>4:
+                    level=4
+                if level<1:
+                    level=1
+                #如果大于4，按照4来算
+                testingStudent.level =level
                 testingStudent.student_id=student.id
                 testingStudent.school_id=student.school_id
                 db.session.add(testingStudent)
@@ -659,7 +666,8 @@ def calculateStudentScore(year):
                     s.score=__getScore(s.row_data,s.project_id)
                     #即使更新过了，这边也要拿到成绩，用于放到tstudent里
                 totalScore+=s.score*weights[s.project_id]
-            t.score=totalScore
+            #保留两位小数存进去
+            t.score=round(totalScore,2)
         db.session.commit()
     except Exception as e:
         #先回退再报错

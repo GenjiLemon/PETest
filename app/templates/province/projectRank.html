@@ -68,13 +68,13 @@
             miniPage = layui.miniPage;
 		form.render();
 		var excTrans=function(d){
-            return (d.excellent_rate*100)+"%"
+            return Number(d.excellent_rate*100).toFixed(2)+"%"
         }
         var goodTrans=function(d){
-            return (d.good_rate*100)+"%"
+            return Number(d.good_rate*100).toFixed(2)+"%"
         }
         var passTrans=function(d){
-            return (d.pass_rate*100)+"%"
+            return Number(d.pass_rate*100).toFixed(2)+"%"
         }
 
         table.render({
