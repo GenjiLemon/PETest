@@ -1,9 +1,10 @@
 import functools
+import os
 from io import BytesIO
 from urllib.parse import quote
 
 import xlsxwriter
-from flask import Blueprint, render_template, request, jsonify, session, send_file
+from flask import Blueprint, render_template, request, jsonify, session, send_file, make_response
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db, models, service, utils,app
@@ -17,7 +18,7 @@ def error_500(error):
     th=0
     for e in error.args:
         th+=1
-        app.logger.exception("api500({}):".format(th)+e)
+        app.logger.exception("api500({}):".format(th)+str(e))
     return jsonRet(-2,"系统错误")
 
 #检查userid
@@ -178,24 +179,16 @@ def school_downloadScoreTemplate():
 @api.route('/downloadStudentTemplate',methods=['GET'])
 @login_required
 def school_downloadStudentTemplate():
-    out = BytesIO()
-    workbook = xlsxwriter.Workbook(out)
-    table = workbook.add_worksheet()
-    headstyle = workbook.add_format({
-        "bold": 1,  # 字体加粗
-        "align": "center",  # 对齐方式
-        "valign": "vcenter",  # 字体对齐方式
-    })
-    headers=['学院(系)名称','年级','专业班级','姓名','性别','学号']
-    table.write_row("A1",headers,cell_format=headstyle)
-    workbook.close()
-    #调整偏移到第一个
-    out.seek(0)
-    #中文正常编码
-    filename = quote("学生信息导入模板.xlsx")
-    rv = send_file(out, as_attachment=True, attachment_filename=filename)
-    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
-    return rv
+    FILE_PATH = "./static/uploadTemplate/"
+    filename = os.path.join(FILE_PATH, "学生信息导入模板.xlsx")
+    response = make_response(send_file(filename))
+    basename = os.path.basename(filename)
+    response.headers["Content-Disposition"] = \
+        "attachment;" \
+        "filename*=UTF-8''{utf_filename}".format(
+            utf_filename=quote(basename.encode('utf-8'))
+        )
+    return response
 
 
 @api.route("/systemInit",methods=['GET'])
@@ -448,24 +441,16 @@ def school_downloadAllScores():
 @api.route('/downloadSchoolTemplate',methods=['GET'])
 @admin_required
 def school_downloadSchoolTemplate():
-    out = BytesIO()
-    workbook = xlsxwriter.Workbook(out)
-    table = workbook.add_worksheet()
-    headstyle = workbook.add_format({
-        "bold": 1,  # 字体加粗
-        "align": "center",  # 对齐方式
-        "valign": "vcenter",  # 字体对齐方式
-    })
-    headers=['学校姓名','学校代码','学校类比']
-    table.write_row("A1",headers,cell_format=headstyle)
-    workbook.close()
-    #调整偏移到第一个
-    out.seek(0)
-    #中文正常编码
-    filename = quote("学校信息导入模板.xlsx")
-    rv = send_file(out, as_attachment=True, attachment_filename=filename)
-    rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
-    return rv
+    FILE_PATH="./static/uploadTemplate/"
+    filename =os.path.join( FILE_PATH , "学校信息导入模板.xlsx")
+    response = make_response(send_file(filename))
+    basename = os.path.basename(filename)
+    response.headers["Content-Disposition"] = \
+        "attachment;" \
+        "filename*=UTF-8''{utf_filename}".format(
+            utf_filename=quote(basename.encode('utf-8'))
+        )
+    return response
 
 @api.route("/uploadSchool", methods=["POST"])
 @admin_required
