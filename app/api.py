@@ -174,7 +174,6 @@ def school_downloadScoreTemplate():
     school_id=session.get('school_id')
     rv=service.downloadScoreTemplate(school_id)
     return rv
-    #参考https://www.cnblogs.com/renguiyouzhi/p/11874479.html
 
 @api.route('/downloadStudentTemplate',methods=['GET'])
 @login_required
