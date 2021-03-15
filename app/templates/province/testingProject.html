@@ -27,7 +27,7 @@
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'name', title: '项目名称'},
-                {field: 'sex', title: '性别'},
+                {field: 'sex', title: '性别',templet:function(d){return d.sex==0?"女":"男";}},
 				{field: 'weight', title: '权重'},
 				{field: 'comment', title: '备注'},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}

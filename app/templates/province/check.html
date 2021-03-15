@@ -41,7 +41,7 @@
                 {field: 'grade', title: '年级'},
                 {field: 'class_name', title: '专业班级'},
                 {field: 'name', title: '姓名'},
-                {field: 'sex',  title: '性别'},
+                {field: 'sex',  title: '性别',templet:function(d){return d.sex==0?"女":"男";}},
                 {field: 'student_number',  title: '学号', sort: true, minWidth: 150},
                 {field: 'comment',  title: '备注'}
             ]],

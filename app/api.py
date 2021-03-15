@@ -407,6 +407,11 @@ def school_downloadAllScores():
         th=0
         tstudentscores=service.getMultipleStudentScore(school_id,year=year)
         for e in tstudentscores:
+            #调一下性别
+            if e['sex']==0:
+                e['sex']="女"
+            else:
+                e['sex']="男"
             th+=1
             # 第五个开始时项目名
             temp=[]
