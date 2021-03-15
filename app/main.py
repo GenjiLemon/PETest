@@ -61,7 +61,8 @@ def login():
                     return jsonRet(data={"url":"/province/index"})
         #没有提前返回的都错了
         return jsonRet(code=-1,msg="账号或密码错误！")
-
+    else:
+        return render_template('login.html')
 
 @app.route('/changePassword')
 @login_required
