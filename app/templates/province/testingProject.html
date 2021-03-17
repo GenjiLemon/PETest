@@ -25,7 +25,8 @@
 			toolbar: '#toolbarDemo',
             data:[],
             cols: [[
-                {field: 'id', title: '序号'},
+                {type: 'numbers',title: '序号', width:40},
+                {field: 'id', title: '序号',hide:true},
 				{field: 'name', title: '项目名称'},
                 {field: 'sex', title: '性别',templet:function(d){return d.sex==0?"女":"男";}},
 				{field: 'weight', title: '权重'},

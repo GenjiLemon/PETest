@@ -50,7 +50,8 @@
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print'],
             cols: [[
-                {field: 'id', title: '序号'},
+                {type: 'numbers',title: '序号', width:40},
+                {field: 'id', title: '序号',hide:true},
 				{field: 'name', title: '学校名称'},
                 {field: 'username', title: '学校账号'},
 				{field: 'password', title: '密码'},

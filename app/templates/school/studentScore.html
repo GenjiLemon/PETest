@@ -82,7 +82,8 @@
             toolbar: '#toolbarDemo',
             defaultToolbar: ['filter', 'exports', 'print'],
             cols: [[
-                {field: 'id', title: '序号'},
+                {type: 'numbers',title: '序号', width:40,fixed: 'left'},
+                {field: 'id', title: '序号',hide:true},
                 {field: 'college_name', title: '学院（系）名称', minWidth: 150, sort: true},
                 {field: 'grade', title: '年级', sort: true},
                 {field: 'class_name', title: '专业班级', sort: true},
@@ -104,7 +105,9 @@
 		
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
+            var index=layer.load(0,{time:100*1000,shade:0.2})
             $.get("/api/testingStudent",data.field,function(res){
+                layer.close(index);
                 newdata=res.code==0?res.data:[];
                 table.reload("currentTableId",{
                     data:newdata
@@ -145,6 +148,6 @@
        var refreshTable=function(){
             $('#search').click();
         };
-        refreshTable();
+        //refreshTable();
     });
 </script>

@@ -65,7 +65,7 @@ def check():
         model['id']=id
         if studentSelection.submit==2:
             #resubmit mode
-            model['type']="申请重新选择体测人"
+            model['type']="申请重新选择体测学生"
         return render_template('province/check.html',model=model)
     else: abort(404)
 

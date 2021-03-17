@@ -89,6 +89,7 @@
 		
         // 监听搜索操作
         form.on('submit(data-search-btn)', function (data) {
+            var index = layer.load(0,{shade:0.2,time:100*1000})
             $.get('/api/schoolTotalScore',data.field,function(res){
                 if(res.code==0){
                     newdata=res.data?res.data:[]
@@ -97,6 +98,7 @@
                 }
             })
             $.get('/api/schoolDetailScore',data.field,function(res){
+                layer.close(index);
                 if(res.code==0){
                     newdata=res.data?res.data:[]
                     console.log(newdata)
