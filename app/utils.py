@@ -109,3 +109,8 @@ def strDictKey(dictdata:dict):
         if isinstance(k,int):
             dictdata[str(k)]=dictdata.pop(k)
     return dictdata
+
+def trans2PercentStr(number,precision=1):
+    if isinstance(number,(float,int)):
+        return str(round(100*number,precision))+"%"
+    else:return None

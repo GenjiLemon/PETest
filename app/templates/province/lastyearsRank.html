@@ -1,0 +1,93 @@
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <fieldset class="table-search-fieldset">
+            <legend>搜索信息</legend>
+            <div style="margin: 10px 10px 10px 10px">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">年份</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="year" autocomplete="off" class="layui-input" lay-verify="required" value={{model['year']}}>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">院校类别</label>
+                            <div class="layui-input-inline">
+                                <select name="school_type"  lay-verify="required">
+                                	<option value=""></option>
+                                	<option value="本科">本科</option>
+                                	<option value="高职高专">高职高专</option>
+                                </select>
+                            </div>
+						</div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">查看类别</label>
+                            <div class="layui-input-inline">
+                               <select name="type"  lay-verify="required">
+									<option value=""></option>
+									<option value=1>合格率排名</option>
+									<option value=2>优良率排名</option>
+                               </select>
+                            </div>
+						</div>
+
+                        <div class="layui-inline">
+                            <button type="submit" class="layui-btn layui-btn-primary"  lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+
+
+    </div>
+</div>
+
+<script>
+    layui.use(['form', 'table','miniPage','element'], function () {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+		form.render();
+
+        table.render({
+            elem: '#currentTableId',
+            data:[],
+            cellMinWidth:100,
+            defaultToolbar: ['filter', 'exports', 'print'],
+            toolbar:true,
+            cols:[[
+				{field: 'school_name', title: '学校名称',minWidth:"150",sort:true},
+                {field: 'rate', title: '率'},
+                {field: 'nowyear', title: '今年排名'},
+                {field: 'lastyear', title: '往年排名'}
+            ]],
+            limits: [10, 15, 20, 25, 50, 100],
+            limit: 15,
+            page: true,
+            skin: 'line'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            var index = layer.load(0, {shade:0.2,time: 10*1000}); //目前没有最长时间，直接运行到结束
+            $.get('/api/getLastYearsRank',data=data.field,function(res){
+				layer.close(index);
+				if(res.code==0){
+				    console.log(res.data);
+					var newdata=res.data['data'];
+					var newtitle=res.data['title'];
+					table.reload("currentTableId",{data:newdata,cols:[newtitle]});
+				}
+			})
+			return false;
+        });
+
+
+    });
+</script>

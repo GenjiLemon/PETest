@@ -159,3 +159,10 @@ def uploadScore():
             schools.append({"id":school.id,"name":school.name})
     return render_template('province/uploadScore.html',schools=schools)
 
+@province.route('/lastyearsRank')
+@admin_required
+def lastyearsRank():
+    year=utils.getNowTestingYear()
+    model={}
+    model['year']=year
+    return render_template('province/lastyearsRank.html',model=model)

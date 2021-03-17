@@ -359,6 +359,15 @@ def getSchoolProjectScoreByName(school_id,project_name,year):
         return round((boy_num*boy.score+girl_num*girl.score)/total_number,2)
     else:return False
 
+def getYearRateRanked(year,type,school_type):
+    # type=1 for passrate type=2 for goodrate
+    schoolids=getTestingSchoolids(year,school_type)
+    scores=SchoolScore.query.filter(SchoolScore.school_id.in_(schoolids)).all()
+    if type==1:
+        return sorted(scores,key=lambda x :(x.pass_rate,x.good_rate,x.excellent_rate),reverse=True)
+    elif type==2:
+        return sorted(scores, key=lambda x: (x.good_rate, x.pass_rate, x.excellent_rate), reverse=True)
+
 #**************省厅end**************
 
 
@@ -591,9 +600,7 @@ def getMultipleStudentScore(schoolid,grade=None,college=None,number=None,year=No
         ret.append(studentscore)
     return ret
 
-#获取学校人数、分数排名等
-def getSchoolScore(schoolid,year):
-    pass
+
 
 #获取学校成绩模板的数据，二维数组的形式，传给api直接生成数据
 #传schoolid为-1 说明只要头

@@ -920,3 +920,68 @@ def province_downloadScoreTemplateProvince():
     rv=service.downloadScoreTemplate(school_id)
     return rv
 
+@api.route('/getLastYearsRank',methods=['GET'])
+@admin_required
+def province_getLastYearRank():
+    year=request.args.get('year')
+    type=request.args.get('type')
+    school_type=request.args.get('school_type')
+    #type=1 for passrate type=2 for goodrate
+    if year!=None and type!=None and school_type!=None:
+        year=int(year)
+        type=int(type)
+        data=[]
+        title=[]
+        if type==1:
+            #修改title
+            title+=[
+                {"field": 'school_name', "title": '学校名称', "minWidth": "150", "sort": "true"},
+                {"field": 'rate', "title": '合格率'},
+                {"field": 'nowyear', "title": str(year)+'排名'},
+                {"field": 'lastyear', "title": str(year-1)+'排名'},
+            ]
+            #获取今年和去年的schoolscore
+            nowyear=service.getYearRateRanked(year,type,school_type)
+            lastyear=service.getYearRateRanked(year-1,type,school_type)
+            #对今年的遍历,为了按照今年排序
+            for e in nowyear:
+                temp={}
+                temp['school_name']=models.School.query.get(e.school_id).name
+                #因为前端无法传入函数,这里直接改了
+                temp['rate']=utils.trans2PercentStr(e.pass_rate)
+                temp['nowyear']=nowyear.index(e)+1
+                for l in lastyear:
+                    if l.school_id==e.school_id:
+                        temp['lastyear']=lastyear.index(l)+1
+                        break
+                #如果没找到就赋值为0
+                if temp.get('lastyear')==None:
+                    temp['lastyear']=0
+                data.append(temp)
+        elif type==2:
+            #和上面只有rate不一样
+            title += [
+                {"field": 'school_name', "title": '学校名称', "minWidth": "150", "sort": "true"},
+                {"field": 'rate', "title": '优良率'},
+                {"field": 'nowyear', "title": str(year) + '排名'},
+                {"field": 'lastyear', "title": str(year-1) + '排名'},
+            ]
+            # 获取今年和去年的schoolscore
+            nowyear = service.getYearRateRanked(year, type, school_type)
+            lastyear = service.getYearRateRanked(year - 1, type, school_type)
+            # 对今年的遍历,为了按照今年排序
+            for e in nowyear:
+                temp = {}
+                temp['school_name'] = models.School.query.get(e.school_id).name
+                temp['rate'] = utils.trans2PercentStr(e.good_rate)
+                temp['nowyear'] = nowyear.index(e) + 1
+                for l in lastyear:
+                    if l.school_id == e.school_id:
+                        temp['lastyear'] = lastyear.index(l) + 1
+                        break
+                # 如果没找到就赋值为0
+                if temp.get('lastyear') == None:
+                    temp['lastyear'] = 0
+                data.append(temp)
+        return jsonRet(data={"title":title,"data":data})
+    else:return jsonRet(-1,"参数缺失")
