@@ -48,5 +48,3 @@ from app.service import *
 #tstudents=TestingStudent.query.filter(TestingStudent.year==2020,TestingStudent.school_id==1).all()
 #print(tstudents)
 #calculateSchoolScoreNumber(2020)
-a=getTemplateData(-1,2020)
-print(a)

@@ -52,6 +52,7 @@
 			if(data.value!=""){
 				$.get('/api/standard?id='+$('#id').text()+'&level='+data.value,function(res){
 				  var newdata=res.code==0?res.data:[];
+				  console.log(newdata);
 				  table.reload('currentTableId', {
 								data:newdata
 				  });
@@ -64,6 +65,9 @@
             elem: '#currentTableId',
 			toolbar: '#toolbarDemo',
             data:[],
+			page:true,
+			limits:[100,200,300],
+			limit:100,
             cols: [[
                 {field: 'id', title: '序号'},
 				{field: 'name', title: '标准名称',edit:"text", sort: true},
@@ -74,8 +78,7 @@
 				{field: 'comment', title: '备注',edit:"text"},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
             ]],
-            skin: 'line',
-            page: true
+            skin: 'line'
         });
 		
         table.on('tool(currentTableFilter)', function (obj) {
@@ -152,19 +155,25 @@
 				    });
 			}
         });
-		
+		//监听添加一行
 		table.on('toolbar(currentTableFilter)', function (obj) {
 		    if (obj.event === 'add') {   
 		        // var level=$(".level").val();//获取当前level选择项的值.
-		        var level= form.val("serch_form").level;
-				console.log(level);
+		        var level= form.val("search_form").level;
 				if(level==""){
 					layer.msg('请先选择年级！')
 				}
 				else{
 					var oldData = table.cache["currentTableId"];
-					var data1={level:level};
-					oldData.push(data1);
+					console.log(oldData)
+					var data1={
+					    level:level,
+						name:"请输入标准名",
+						score:0.0,
+						bottom:0.0,
+						top:0.0
+					};
+					oldData.unshift(data1);
 					table.reload('currentTableId',{data : oldData});
 				}
 		    } 

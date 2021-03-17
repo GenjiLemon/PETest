@@ -5,6 +5,10 @@
     <div class="layuimini-main">
 
 
+<!--        模板下载-->
+        {% if model['status']==2 %}
+            <div class="content-margin"><button class="layui-btn layui-btn-lg" id="download">下载成绩模板</button></div>
+        {% endif %}
         <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
 		<div class="content-margin">提交状态：{{model['status_word']}}</div>
 		<div class="content-margin">提交备注：{{model['submit_comment']|default("")}}</div>
@@ -23,10 +27,6 @@
             </div>
         {% endif %}
 
-<!--        模板下载-->
-        {% if model['status']==2 %}
-            <div class="content-margin"><button class="layui-btn layui-btn-lg" id="download">下载成绩模板</button></div>
-        {% endif %}
     </div>
 </div>
 <script>

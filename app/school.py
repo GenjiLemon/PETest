@@ -118,7 +118,7 @@ def submitStatus():
     if status==-1:
         status_word="未提交"
     elif status==0:
-        status_word="审核未通过"
+        status_word="等待重新提交"
     elif status==1:
         status_word="审核中"
     elif status==2:
