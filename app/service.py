@@ -463,14 +463,14 @@ def selectStudents(studentids,year:int):
                 testingStudent=TestingStudent()
                 testingStudent.year=year
                 # year等于2018 说明2018-2019年的体测，2018级的学生属于大一
-                level=year-gradeToInt(student.grade)+1
-                #年级矫正
-                if level>4:
-                    level=4
-                if level<1:
-                    level=1
+                #level整体计算更新，直接根据systemsettings里的level_benke level_zhuanke来取
+                school=School.query.get(student.school_id)
+                #给个虚假的初始值
+                if school.type=="本科":
+                    testingStudent.level=int(getSystemSetting("level_benke"))
+                elif school.type=="高职高专":
+                    testingStudent.level=int(getSystemSetting("level_zhuanke"))
                 #如果大于4，按照4来算
-                testingStudent.level =level
                 testingStudent.student_id=student.id
                 testingStudent.school_id=student.school_id
                 db.session.add(testingStudent)
@@ -893,3 +893,29 @@ def downloadScoreTemplate(school_id):
     rv = send_file(out, as_attachment=True, attachment_filename=filename)
     rv.headers['Content-Disposition'] += "; filename*=utf-8''{}".format(filename)
     return rv
+
+#获取系统配置数据
+def getSystemSetting(name):
+    res=Systemsetting.query.filter(Systemsetting.name == name).first()
+    if res:
+        return res.value
+    else: return None
+def updateSystemSetting(name,value,comment=None):
+    #转化为str类型
+    value=str(value)
+    res=Systemsetting.query.filter(Systemsetting.name == name).first()
+    #如果在就更新
+    if res:
+        if comment:
+            res.comment=comment
+        res.value=value
+    else:
+        #否则为添加模式
+        newsetting=Systemsetting()
+        newsetting.name=name
+        newsetting.value=value
+        if comment:
+            newsetting.comment=comment
+        db.session.add(newsetting)
+    #提交更新
+    db.session.commit()

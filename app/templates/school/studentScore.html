@@ -92,6 +92,12 @@
 				{field: 'student_number',  title: '学号', sort: true, minWidth: 150},
                 {field: 'year',  title: '体测年份'},
                 {field: 'score',  title: '总分'},
+                {title:"评价",templet:function(e){
+                    if(e.score>=90){return "优秀";}
+                    else if(e.score>=80){return "良好";}
+                    else if(e.score>=60){return "及格";}
+                    else{return "不及格";}
+                }},
                 {title: '操作', minWidth: 150, toolbar: '#currentTableBar', align: "center"}
 				]],
             limits: [10, 15, 20, 25, 50, 100],

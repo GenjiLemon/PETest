@@ -1,4 +1,4 @@
-from app import *
+
 from app.models import *
 from app import models
 from sqlalchemy import and_,or_

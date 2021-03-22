@@ -209,3 +209,12 @@ class Systemmenu(db.Model):
         if self.child:
              rt['child']=[c.serializable() for c in self.child if self.child]
         return rt
+
+#系统配置表
+class Systemsetting(db.Model):
+    __tablename__='systemsetting'
+    id=db.Column(db.Integer,primary_key=True,nullable=False)
+    name=db.Column(db.String(20))                                                         #配置名
+    comment=db.Column(db.String(50),default="")                                           #备注
+    value=db.Column(db.String(50))                                                        #配置值
+    update_time = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())  # 修改时间，自动更新字段

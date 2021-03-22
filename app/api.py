@@ -99,8 +99,7 @@ def school_student():
 def school_testingStudent():
     if request.method=="GET":
         data=request.args.to_dict()
-        year=utils.getNowTestingYear()
-        data=service.getMultipleStudentScore(schoolid=session.get('school_id'),grade=data.get('grade'),college=data.get('college_name'),class_name=data.get('class_name'),year=year)
+        data=service.getMultipleStudentScore(schoolid=session.get('school_id'),grade=data.get('grade'),college=data.get('college_name'),class_name=data.get('class_name'),year=data.get('year'))
         return jsonRet(data=data)
     if request.method=="POST":
         status=service.getSubmitStatus(session.get('school_id'),utils.getNowTestingYear())
@@ -331,9 +330,10 @@ def school_schoolTotalScore():
     if year:
         type=models.School.query.get(school_id).type
         alldata=service.getTotalScoreRank(year,type)
-        for e in alldata:
-            if e.school_id==school_id:
-                return jsonRet(data=[e])
+        if alldata:
+            for e in alldata:
+                if e.school_id==school_id:
+                    return jsonRet(data=[e])
         return jsonRet(-1,"未找到该校数据")
     else:
         return jsonRet(-1,"参数不全")
