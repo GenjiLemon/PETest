@@ -368,13 +368,17 @@ def getYearRateRanked(year,type,school_type):
     elif type==2:
         return sorted(scores, key=lambda x: (x.good_rate, x.pass_rate, x.excellent_rate), reverse=True)
 
+def updateAllSettings(settingsform):
+    #先获取所有的设置
+    allsettings=Systemsetting.query.all()
+    #遍历所有的设置项，如果名字相同（能找到）就更新，否则不更新
+    for e in allsettings:
+        newvalue=settingsform.get(e.name)
+        if newvalue:
+            e.value=newvalue
+    #提交所有更新
+    db.session.commit()
 #**************省厅end**************
-
-
-#**************各种数据导出**************
-#**************各种数据导出**************
-
-
 
 #**************学校端begin**************
 #导入学生信息

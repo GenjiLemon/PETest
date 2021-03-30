@@ -440,6 +440,17 @@ def school_downloadAllScores():
         return rv
     else:
         abort(404)
+
+@api.route('/systemsettings',methods=['GET','PUT'])
+@admin_required
+def province_settings():
+    if request.method=='GET':
+        allsettings=models.Systemsetting.query.all()
+        return jsonRet(data=allsettings)
+    elif request.method=='PUT':
+        service.updateAllSettings(request.form.to_dict())
+        return jsonRet()
+
 #************************分割线************************
 
 @api.route('/downloadSchoolTemplate',methods=['GET'])

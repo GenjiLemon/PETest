@@ -142,6 +142,12 @@ def testingStandard():
         return render_template('province/testingStandard.html',id=id)
     else: abort(404)
 
+@province.route('/systemsettings')
+@admin_required
+def systemsettings():
+    return render_template('province/systemsettings.html')
+
+
 @province.route('/uploadSchool')
 @admin_required
 def uploadSchool():

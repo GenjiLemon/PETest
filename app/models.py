@@ -218,3 +218,7 @@ class Systemsetting(db.Model):
     comment=db.Column(db.String(50),default="")                                           #备注
     value=db.Column(db.String(50))                                                        #配置值
     update_time = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())  # 修改时间，自动更新字段
+
+    def serializable(self):
+        ret = objToDict(self)
+        return ret

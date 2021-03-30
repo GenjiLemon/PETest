@@ -1,0 +1,81 @@
+<style>
+    .layui-form-item .layui-input-company {width: auto;padding-right: 10px;line-height: 38px;}
+</style>
+<div class="layuimini-container layuimini-page-anim">
+    <div class="layuimini-main">
+
+        <div class="layui-form layuimini-form" lay-filter="settings">
+            <div class="layui-form-item">
+				<label class="layui-form-label required">本科生<br>体测标准年级选择</label>
+                <div class="layui-input-block">
+					<select name="level_benke">
+						<option value="1">大一</option>
+						<option value="2">大二</option>
+						<option value="3">大三</option>
+						<option value="4">大四</option>
+					</select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">高职高专生<br>体测标准年级选择</label>
+                <div class="layui-input-block">
+					<select name="level_zhuanke">
+						<option value="1">大一</option>
+						<option value="2">大二</option>
+						<option value="3">大三</option>
+						<option value="4">大四</option>
+					</select>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="setting">确认保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form
+            ,$ = layui.$
+            , layer = layui.layer;
+
+        /**
+         * 初始化表单，要加上，不然刷新部分组件可能会不加载
+         */
+        form.render();
+		$.get('/api/systemsettings',function(res){
+		    if(res.code==0){
+		        //自己组装成key-map格式
+		        var allsettings={}
+		        res.data.forEach(function(item,index){
+		            allsettings[item.name]=item.value
+		        })
+                form.val("settings", {
+                  "level_benke": allsettings['level_benke'],
+                  "level_zhuanke": allsettings['level_zhuanke']
+                });
+		    }
+		})
+        //监听提交
+        form.on('submit(setting)', function (data) {
+            $.ajax({
+                url:'/api/systemsettings',
+                method:"PUT",
+                data:data.field,
+                success:(res)=>{
+                    if(res.code==0){
+                        layer.msg("更新成功！")
+                    }
+                    else{
+                        layer.alert("更新失败！"+res.msg)
+                    }
+                }
+            })
+            return false;
+        });
+
+    });
+</script>
