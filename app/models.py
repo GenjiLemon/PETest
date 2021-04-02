@@ -161,6 +161,17 @@ class SchoolScoreDetail(db.Model):
         ret = objToDict(self)
         return ret
 
+    def copy(self):
+        temp=SchoolScoreDetail()
+        temp.year=self.year
+        temp.score=self.score
+        temp.excellent_rate=self.excellent_rate
+        temp.good_rate=self.good_rate
+        temp.pass_rate=self.pass_rate
+        temp.school_id=self.school_id
+        temp.project_id=self.project_id
+        return temp
+
 #每年选体测项目
 class ProjectSelection(db.Model):
     __tablename__='projectselection'

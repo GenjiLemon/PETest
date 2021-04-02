@@ -175,23 +175,31 @@ def getProjectRank(project_name,year,school_type,sex):
             boyScoreDetails = SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
                                                   SchoolScoreDetail.project_id == boy.id,
                                                   SchoolScoreDetail.school_id.in_(schoolids)).all()
+            totalScoreDetals=[]
             for e in boyScoreDetails:
-                school=School.query.get(e.school_id)
-                schoolScore=SchoolScore.query.filter(SchoolScore.school_id==e.school_id).first()
+                #复制一份,作为合并的返回
+                temp=e.copy()
+                school=School.query.get(temp.school_id)
+                #拿到数量
+                schoolScore=SchoolScore.query.filter(SchoolScore.school_id==temp.school_id).first()
                 boy_num=schoolScore.boy_number
                 girl_num=schoolScore.girl_number
                 total_num=boy_num+girl_num
+                #找到对应的女项目的成绩
                 girlScoreDetail=SchoolScoreDetail.query.filter(SchoolScoreDetail.year == year,
                                                   SchoolScoreDetail.project_id == girl.id,
-                                                  SchoolScoreDetail.school_id==e.school_id).first()
-                e.score=round((e.score*boy_num+girlScoreDetail.score*girl_num)/total_num,2)
-                e.excellent_rate=round((e.excellent_rate*boy_num+girlScoreDetail.excellent_rate*girl_num)/total_num,4)
-                e.good_rate=round((e.good_rate*boy_num+girlScoreDetail.good_rate*girl_num)/total_num,4)
-                e.pass_rate=round((e.pass_rate*boy_num+girlScoreDetail.pass_rate*girl_num)/total_num,4)
+                                                  SchoolScoreDetail.school_id==temp.school_id).first()
+                #成绩组合
+                temp.score=round((temp.score*boy_num+girlScoreDetail.score*girl_num)/total_num,2)
+                temp.excellent_rate=round((temp.excellent_rate*boy_num+girlScoreDetail.excellent_rate*girl_num)/total_num,4)
+                temp.good_rate=round((temp.good_rate*boy_num+girlScoreDetail.good_rate*girl_num)/total_num,4)
+                temp.pass_rate=round((temp.pass_rate*boy_num+girlScoreDetail.pass_rate*girl_num)/total_num,4)
+                #把合并后的temp加进去
+                totalScoreDetals.append(temp)
             #都加到boy上，boy就是女生加男生共同的ScoreDetails
             #但是要重新排序一下score
-            boyScoreDetails.sort(key=lambda x: x.score, reverse=True)
-            ret = __addRankandName(boyScoreDetails)
+            totalScoreDetals.sort(key=lambda x: x.score, reverse=True)
+            ret = __addRankandName(totalScoreDetals)
             return ret
         else:
             #如果只有一个性别就找一个性别的
