@@ -194,6 +194,7 @@ def getProjectRank(project_name,year,school_type,sex):
             ret = __addRankandName(boyScoreDetails)
             return ret
         else:
+            #如果只有一个性别就找一个性别的
             return getProjectRank(project_name,year,school_type,1 if boy else 0)
     else:
         #先找这个项目是否存在，拿到id

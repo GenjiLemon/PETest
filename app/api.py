@@ -341,33 +341,22 @@ def school_schoolTotalScore():
 @api.route('/schoolDetailScore',methods=['GET'])
 def school_schoolDetailScore():
     year=request.args.get('year')
-    school_id=session['school_id']
     if year:
-        type = models.School.query.get(school_id).type
-        ret=[]
-        #男生项目女生项目分开处理
-        boy_projects=service.getSelectProjects(year,1)
-        for e in boy_projects:
-            #拿到基于schoolscoredetail的obj
-            alldata=service.getProjectRank(e.name,year,type,1)
-            for each in alldata:
-                if each.school_id==school_id:
-                    each.project_name=e.name+"(男)"
-                    ret.append(each)
+        school_id = session['school_id']
+        school_type = models.School.query.get(school_id).type
+        res=[]
+        for e in service.getProjectNames(year):
+        #如果sex为all说明为全都要
+            #先拿到所有的
+            temp=service.getProjectRank(e,year,school_type,"all")
+            #从中选出这个学校的
+            for i in temp:
+                if i.school_id==school_id:
+                    #加上项目名
+                    i.project_name=e
+                    res.append(i)
                     break
-
-        girl_projects=service.getSelectProjects(year,0)
-        for e in girl_projects:
-            #拿到基于schoolscoredetail的obj
-            alldata=service.getProjectRank(e.name,year,type,0)
-            if alldata:
-                for each in alldata:
-                    if each.school_id==school_id:
-                        each.project_name=e.name+ "(女)"
-                        ret.append(each)
-                        break
-        ret=utils.addIdColumn(ret,obj=True)
-        return jsonRet(data=ret)
+        return jsonRet(data=res)
     else:
         return jsonRet(-1,"参数不全")
 

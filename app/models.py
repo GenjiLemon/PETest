@@ -222,3 +222,4 @@ class Systemsetting(db.Model):
     def serializable(self):
         ret = objToDict(self)
         return ret
+
