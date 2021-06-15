@@ -465,7 +465,7 @@ def province_uploadSchool():
         #默认会去掉第一行，正好把中文头部去掉
         data=np.array(WS).tolist()
         header=['name','code','type']
-        count= len(data)-1
+        count= len(data)
         service.quickInsert(models.School,header,data)
         return jsonRet(msg="新增了{}个学校".format(count))
     return jsonRet(-1,msg="没有找到上传文件")

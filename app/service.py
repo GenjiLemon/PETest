@@ -392,15 +392,15 @@ def updateAllSettings(settingsform):
 #**************学校端begin**************
 #导入学生信息
 
-def importStudent(filename,school_id):
-    file_root_path=r"F:/zanproject/高校体测数据处理系统/code/tests/"
-    filepath=os.path.join(file_root_path,filename)
-    data=utils.excelToMatrix(filepath,header=0)
-    columns=['school_id','college_name','grade','class_name','name','sex','student_number']
-    for e in data:
-        e[0]=1
-        e[5]=1 if e[5]=="男" else 0
-    quickInsert(Student,columns,data)
+# def importStudent(filename,school_id):
+#     file_root_path=r"F:/zanproject/高校体测数据处理系统/code/tests/"
+#     filepath=os.path.join(file_root_path,filename)
+#     data=utils.excelToMatrix(filepath,header=0)
+#     columns=['school_id','college_name','grade','class_name','name','sex','student_number']
+#     for e in data:
+#         e[0]=1
+#         e[5]=1 if e[5]=="男" else 0
+#     quickInsert(Student,columns,data)
 
 def addStudent(student:Student):
    try:
@@ -673,18 +673,18 @@ def calculateStudentScore(year):
     #先计算出各个项目对应的真实权值
     weights=getProjectWeight(year)
     #先处理原始成绩
+    tstudentids=TestingScore.query.filter(TestingScore.score==None).with_entities(TestingScore.tstudent_id).distinct().all()
     try:
-        tstudents=TestingStudent.query.filter(TestingStudent.year==year).all()
-        for t in tstudents:
+        for tid in tstudentids:
+            t=TestingStudent.query.get(tid)
             #找到所有成绩
             scores=TestingScore.query.filter(TestingScore.tstudent_id==t.id).all()
             totalScore=0
             for s in scores:
                 #每个成绩进行原始成绩转化为得分
-                if s.score==None:
-                    #score 没有默认值0，所以NOne是没计算过
-                    s.score=__getScore(s.row_data,s.project_id)
-                    #即使更新过了，这边也要拿到成绩，用于放到tstudent里
+                #score 没有默认值0，所以NOne是没计算过
+                s.score=__getScore(s.row_data,s.project_id)
+                #即使更新过了，这边也要拿到成绩，用于放到tstudent里
                 totalScore+=s.score*weights[s.project_id]
             #保留两位小数存进去
             t.score=round(totalScore,2)
@@ -701,14 +701,14 @@ def __getScore(row_data,project_id):
     project = TestingProject.query.get(project_id)
     if project.scoreType==1:
         #高优计算是 =< <
-        for standard in project.standards:
-            if row_data>=standard.bottom and row_data<standard.top:
-                return standard.score
+        standard=TestingStandard.query.filter(TestingStandard.project_id==project_id,row_data>=TestingStandard.bottom,row_data<TestingStandard.top).first()
+        if standard:
+            return standard.score
     elif project.scoreType==-1:
         #低优计算是 < <=
-        for standard in project.standards:
-            if row_data>standard.bottom and row_data<=standard.top:
-                return standard.score
+        standard=TestingStandard.query.filter(TestingStandard.project_id==project_id,row_data>TestingStandard.bottom,row_data<=TestingStandard.top).first()
+        if standard:
+            return standard.score
     #找不到返回0
     return 0
 
