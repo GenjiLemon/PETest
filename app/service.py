@@ -683,7 +683,8 @@ def calculateStudentScore(year):
             for s in scores:
                 #每个成绩进行原始成绩转化为得分
                 #score 没有默认值0，所以NOne是没计算过
-                s.score=__getScore(s.row_data,s.project_id)
+                if s.score==None:
+                    s.score=__getScore(s.row_data,s.project_id,t.level)
                 #即使更新过了，这边也要拿到成绩，用于放到tstudent里
                 totalScore+=s.score*weights[s.project_id]
             #保留两位小数存进去
@@ -695,18 +696,18 @@ def calculateStudentScore(year):
         raise e
 
 #给原始成绩和项目查找实际成绩，如果找不到返回0
-def __getScore(row_data,project_id):
+def __getScore(row_data,project_id,level):
     #rowdata是字符串
     row_data=float(row_data)
     project = TestingProject.query.get(project_id)
     if project.scoreType==1:
         #高优计算是 =< <
-        standard=TestingStandard.query.filter(TestingStandard.project_id==project_id,row_data>=TestingStandard.bottom,row_data<TestingStandard.top).first()
+        standard=TestingStandard.query.filter(TestingStandard.level==level,TestingStandard.project_id==project_id,row_data>=TestingStandard.bottom,row_data<TestingStandard.top).first()
         if standard:
             return standard.score
     elif project.scoreType==-1:
         #低优计算是 < <=
-        standard=TestingStandard.query.filter(TestingStandard.project_id==project_id,row_data>TestingStandard.bottom,row_data<=TestingStandard.top).first()
+        standard=TestingStandard.query.filter(TestingStandard.level==level,TestingStandard.project_id==project_id,row_data>TestingStandard.bottom,row_data<=TestingStandard.top).first()
         if standard:
             return standard.score
     #找不到返回0
